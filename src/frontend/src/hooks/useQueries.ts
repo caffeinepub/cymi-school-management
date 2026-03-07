@@ -8,6 +8,14 @@ const DEMO_USERS: Record<
   string,
   { password: string; profile: Omit<UserProfile, "username"> }
 > = {
+  superadmin: {
+    password: "superadmin123",
+    profile: {
+      firstName: "Super",
+      lastName: "Admin",
+      schoolRole: "SuperAdmin" as SchoolRole,
+    },
+  },
   admin: {
     password: "admin123",
     profile: {
@@ -16,12 +24,12 @@ const DEMO_USERS: Record<
       schoolRole: SchoolRole.Admin,
     },
   },
-  teacher1: {
-    password: "teacher123",
+  parent1: {
+    password: "parent123",
     profile: {
-      firstName: "John",
-      lastName: "Smith",
-      schoolRole: SchoolRole.Teacher,
+      firstName: "Priya",
+      lastName: "Sharma",
+      schoolRole: "Parent" as SchoolRole,
     },
   },
   student1: {
@@ -33,19 +41,6 @@ const DEMO_USERS: Record<
     },
   },
 };
-
-function parseSchoolRole(role: string): SchoolRole {
-  switch (role) {
-    case "Admin":
-      return SchoolRole.Admin;
-    case "Teacher":
-      return SchoolRole.Teacher;
-    case "Student":
-      return SchoolRole.Student;
-    default:
-      return SchoolRole.Student;
-  }
-}
 
 // ─── Auth Queries ─────────────────────────────────────────────────────────────
 
@@ -66,7 +61,7 @@ export function useCallerUserProfile() {
           firstName: parsed.firstName,
           lastName: parsed.lastName,
           username: parsed.username,
-          schoolRole: parseSchoolRole(parsed.schoolRole),
+          schoolRole: parsed.schoolRole as SchoolRole,
         } satisfies UserProfile;
       } catch {
         return null;

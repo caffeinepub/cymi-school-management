@@ -4,9 +4,30 @@ import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { useLogin } from "../hooks/useQueries";
 
+type RoleTab = "SuperAdmin" | "Admin" | "Parent" | "Student";
+
+const ROLE_TABS: { id: RoleTab; label: string; hint: string }[] = [
+  {
+    id: "SuperAdmin",
+    label: "Super Admin",
+    hint: "superadmin / superadmin123",
+  },
+  { id: "Admin", label: "Admin", hint: "admin / admin123" },
+  { id: "Parent", label: "Parent", hint: "parent1 / parent123" },
+  { id: "Student", label: "Student", hint: "student1 / student123" },
+];
+
+const TAB_OCID: Record<RoleTab, string> = {
+  SuperAdmin: "login.superadmin_tab",
+  Admin: "login.admin_tab",
+  Parent: "login.parent_tab",
+  Student: "login.student_tab",
+};
+
 export default function LoginPage() {
   const navigate = useNavigate();
 
+  const [activeTab, setActiveTab] = useState<RoleTab>("SuperAdmin");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -44,6 +65,7 @@ export default function LoginPage() {
   };
 
   const isLoading = loginMutation.isPending;
+  const activeHint = ROLE_TABS.find((t) => t.id === activeTab)?.hint ?? "";
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -90,14 +112,43 @@ export default function LoginPage() {
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
               <div className="bg-white rounded-lg login-card-shadow overflow-hidden">
-                <div className="px-8 py-8">
+                <div className="px-8 pt-8 pb-6">
                   {/* ── School Logo ── */}
-                  <div className="flex justify-center mb-6">
+                  <div className="flex justify-center mb-5">
                     <img
                       src="/assets/uploads/cymi-1.PNG"
                       alt="CYMI School Logo"
                       className="w-20 h-20 object-contain"
                     />
+                  </div>
+
+                  {/* ── Role Tabs ── */}
+                  <div className="mb-5">
+                    <div className="grid grid-cols-4 rounded-md overflow-hidden border border-gray-200">
+                      {ROLE_TABS.map((tab) => {
+                        const isActive = activeTab === tab.id;
+                        return (
+                          <button
+                            key={tab.id}
+                            type="button"
+                            data-ocid={TAB_OCID[tab.id]}
+                            onClick={() => {
+                              setActiveTab(tab.id);
+                              setErrorMsg(null);
+                            }}
+                            className={[
+                              "py-2 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400/60",
+                              isActive
+                                ? "btn-cymi text-white"
+                                : "bg-gray-50 text-gray-500 hover:bg-gray-100",
+                            ].join(" ")}
+                            aria-pressed={isActive}
+                          >
+                            {tab.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* ── Login Form ── */}
@@ -127,7 +178,7 @@ export default function LoginPage() {
                         <Lock className="w-4 h-4" />
                       </span>
                       <input
-                        data-ocid="login.input"
+                        data-ocid="login.password_input"
                         id="password"
                         type="password"
                         name="password"
@@ -192,11 +243,12 @@ export default function LoginPage() {
                     </div>
                   </form>
 
-                  {/* Demo credentials hint */}
+                  {/* Demo credentials hint for active tab */}
                   <div className="mt-5 pt-4 border-t border-gray-100 text-center text-xs text-gray-400">
                     Demo:{" "}
-                    <span className="font-medium text-gray-600">admin</span> /{" "}
-                    <span className="font-medium text-gray-600">admin123</span>
+                    <span className="font-medium text-gray-600">
+                      {activeHint}
+                    </span>
                   </div>
                 </div>
               </div>

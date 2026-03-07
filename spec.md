@@ -1,31 +1,25 @@
-# CYMI School Management System
+# CYMI School Management
 
 ## Current State
-A school management app with a login page and dashboard. The login uses username/password credentials stored in the backend. The current backend `seedDemoUsers` function requires admin authorization (via `AccessControl.isAdmin`) but is called by an anonymous browser user, so it always fails silently. As a result, no credentials are ever seeded and login with admin/admin123 always returns null.
+- Admin and SuperAdmin dashboards show stat cards (total students, total teachers, access level) and an info panel.
+- No data visualizations exist on any dashboard.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Auto-seed demo credentials at actor initialization (not requiring admin access)
-- Token-based session management that doesn't depend on Internet Identity / Principal
-- `getUserProfileByToken(token)` query to fetch profile from session token
-- `getDashboardStats(token)` accepting a token parameter to verify session
+- A pie/donut chart on both the Admin and SuperAdmin dashboard panels showing a breakdown of school composition (Students, Teachers, Staff, Others).
+- A legend below or beside the chart listing each slice with its label, value, and percentage.
+- Chart follows best practices: slices ordered by size descending, percentage labels on slices, max 5 categories.
 
 ### Modify
-- `seedDemoUsers` - remove admin authorization requirement; seed admin/admin123, teacher1/teacher123, student1/student123
-- `login(username, password)` - remove Principal/AccessControl dependency; return a simple text token on success
-- `logout(token)` - remove Principal/AccessControl dependency
-- `validateToken(token)` - return username (Text) instead of Principal
-- `getDashboardStats` - accept token param instead of requiring authenticated Principal caller
-- Frontend `useQueries.ts` - update `useDashboardStats` to pass token; update `useLogin` return/flow
-- Frontend `LoginPage.tsx` - remove actor not-ready guard from seed call; improve UX
-- Frontend `DashboardPage.tsx` - pass stored token to dashboard stats query
+- AdminPanel and SuperAdminPanel components updated to include the pie chart section below the stat cards and above the info box.
 
 ### Remove
-- Authorization / AccessControl dependency from main.mo (replace with simple credential map)
+- Nothing removed.
 
 ## Implementation Plan
-1. Regenerate backend with token-based auth, no Principal/AccessControl, auto-seeding of demo users
-2. Update frontend useQueries.ts to match new API signatures
-3. Update DashboardPage to pass token to getDashboardStats
-4. Validate and deploy
+1. Install / confirm recharts is available (it ships with the shadcn chart component).
+2. Create a `SchoolCompositionPieChart` component using recharts `PieChart` + `Pie` + `Cell` with a custom legend.
+3. Add the chart component into `AdminPanel` and `SuperAdminPanel` in `DashboardPage.tsx`.
+4. Use sample proportional data: Students 65%, Teachers 20%, Staff 10%, Others 5%.
+5. Style with CYMI blue palette, responsive container, animated entrance.

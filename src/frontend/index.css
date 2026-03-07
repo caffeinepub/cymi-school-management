@@ -102,6 +102,44 @@
 }
 
 /* ─── CYMI Custom Utilities ─── */
+
+/* Sidebar dark navy */
+.sidebar-cymi {
+  background-color: oklch(0.22 0.04 240);
+  box-shadow: 2px 0 8px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Sidebar nav item base */
+.sidebar-item {
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.sidebar-item:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+}
+.sidebar-item:hover .text-white\/70,
+.sidebar-item:hover .text-white\/90 {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+/* Sidebar child items */
+.sidebar-child-item {
+  color: rgba(255, 255, 255, 0.65);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+.sidebar-child-item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* Tooltip in sidebar context */
+.sidebar-tooltip {
+  background-color: oklch(0.22 0.04 240);
+  color: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.75rem;
+  padding: 4px 10px;
+}
+
 .navbar-cymi {
   background-color: oklch(var(--cymi-navbar));
 }
