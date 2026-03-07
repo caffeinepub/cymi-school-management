@@ -10,6 +10,9 @@ import {
 import DashboardPage from "./pages/DashboardPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import LoginPage from "./pages/LoginPage";
+import ReportsPage from "./pages/ReportsPage";
+import SystemSettingsPage from "./pages/SystemSettingsPage";
+import UserManagementPage from "./pages/UserManagementPage";
 
 // Root layout — just renders the outlet + toaster
 const rootRoute = createRootRoute({
@@ -45,6 +48,24 @@ const forgotPasswordRoute = createRoute({
   component: ForgotPasswordPage,
 });
 
+const userManagementRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/user-management",
+  component: UserManagementPage,
+});
+
+const systemSettingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/system-settings",
+  component: SystemSettingsPage,
+});
+
+const reportsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/reports",
+  component: ReportsPage,
+});
+
 const catchAllRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "*",
@@ -56,6 +77,9 @@ const routeTree = rootRoute.addChildren([
   loginRoute,
   dashboardRoute,
   forgotPasswordRoute,
+  userManagementRoute,
+  systemSettingsRoute,
+  reportsRoute,
   catchAllRoute,
 ]);
 

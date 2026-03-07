@@ -6,6 +6,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import {
+  BarChart2,
   BookOpen,
   BookOpenCheck,
   CalendarCheck,
@@ -48,6 +49,7 @@ interface SidebarProps {
 // ─── Menu Definitions ────────────────────────────────────────────────────────
 
 function getMenuItems(role: string): NavItem[] {
+  // role used for conditional SuperAdmin items below
   const isAdminLike = role === "SuperAdmin" || role === "Admin";
   const isParent = role === "Parent";
 
@@ -96,11 +98,34 @@ function getMenuItems(role: string): NavItem[] {
         children: [{ label: "Fee Management" }, { label: "Reports" }],
       },
       {
-        label: "Settings",
-        icon: <Settings className="w-5 h-5" />,
-        href: "/dashboard",
-        ocid: "sidebar.settings_link",
+        label: "User Management",
+        icon: <Users className="w-5 h-5" />,
+        href: "/user-management",
+        ocid: "sidebar.user_management_link",
       },
+      {
+        label: "Reports",
+        icon: <BarChart2 className="w-5 h-5" />,
+        href: "/reports",
+        ocid: "sidebar.reports_link",
+      },
+      ...(role === "SuperAdmin"
+        ? [
+            {
+              label: "System Settings",
+              icon: <Settings className="w-5 h-5" />,
+              href: "/system-settings",
+              ocid: "sidebar.system_settings_link",
+            } as NavItem,
+          ]
+        : [
+            {
+              label: "Settings",
+              icon: <Settings className="w-5 h-5" />,
+              href: "/dashboard",
+              ocid: "sidebar.settings_link",
+            } as NavItem,
+          ]),
     ];
   }
 
