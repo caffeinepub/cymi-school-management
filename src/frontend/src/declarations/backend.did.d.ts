@@ -19,6 +19,24 @@ export interface DemiUser {
 export type SchoolRole = { 'Teacher' : null } |
   { 'Student' : null } |
   { 'Admin' : null };
+export interface Student {
+  'id' : bigint,
+  'dob' : string,
+  'joinDate' : string,
+  'feeStatus' : string,
+  'parentPhone' : string,
+  'section' : string,
+  'email' : string,
+  'attendancePct' : bigint,
+  'grade' : bigint,
+  'address' : string,
+  'gender' : string,
+  'admissionNo' : string,
+  'phone' : string,
+  'lastName' : string,
+  'parentName' : string,
+  'firstName' : string,
+}
 export interface UserProfile {
   'schoolRole' : SchoolRole,
   'username' : string,
@@ -31,7 +49,10 @@ export type UserRole = { 'admin' : null } |
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addDemiUser' : ActorMethod<[bigint, string, string, UserRole], DemiUser>,
+  'addStudent' : ActorMethod<[Student], Student>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'deleteStudent' : ActorMethod<[bigint], undefined>,
+  'getAllStudents' : ActorMethod<[], Array<Student>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getDashboardStats' : ActorMethod<
@@ -39,6 +60,8 @@ export interface _SERVICE {
     { 'totalStudents' : bigint, 'totalTeachers' : bigint }
   >,
   'getDemiUserById' : ActorMethod<[bigint], [] | [DemiUser]>,
+  'getStudentById' : ActorMethod<[bigint], [] | [Student]>,
+  'getStudentCount' : ActorMethod<[], bigint>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'login' : ActorMethod<[string, string], [] | [string]>,
@@ -46,8 +69,10 @@ export interface _SERVICE {
   'removeDemiUser' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'seedDemoUsers' : ActorMethod<[], undefined>,
+  'seedStudents' : ActorMethod<[Array<Student>], undefined>,
   'totalDemiUsers' : ActorMethod<[], bigint>,
   'updateDemiUser' : ActorMethod<[bigint, string, string, UserRole], DemiUser>,
+  'updateStudent' : ActorMethod<[Student], Student>,
   'validateToken' : ActorMethod<[string], [] | [Principal]>,
 }
 export declare const idlService: IDL.ServiceClass;

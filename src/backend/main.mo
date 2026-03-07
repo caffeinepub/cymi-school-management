@@ -1,11 +1,15 @@
 import Nat "mo:core/Nat";
 import Map "mo:core/Map";
+import Array "mo:core/Array";
 import Runtime "mo:core/Runtime";
 import Principal "mo:core/Principal";
 import Text "mo:core/Text";
+import Iter "mo:core/Iter";
 import AccessControl "authorization/access-control";
 import MixinAuthorization "authorization/MixinAuthorization";
+import Migration "migration";
 
+(with migration = Migration.run)
 actor {
   type UserRole = AccessControl.UserRole;
 
@@ -33,6 +37,25 @@ actor {
     role : UserRole;
   };
 
+  public type Student = {
+    id : Nat;
+    admissionNo : Text;
+    firstName : Text;
+    lastName : Text;
+    grade : Nat;
+    section : Text;
+    gender : Text;
+    dob : Text;
+    phone : Text;
+    parentName : Text;
+    parentPhone : Text;
+    email : Text;
+    address : Text;
+    feeStatus : Text;
+    attendancePct : Nat;
+    joinDate : Text;
+  };
+
   module DemiUser {
     public func create(id : Nat, firstName : Text, lastName : Text, role : UserRole) : DemiUser {
       {
@@ -44,12 +67,15 @@ actor {
     };
   };
 
+  let students = Map.empty<Nat, Student>();
   let demiUsers = Map.empty<Nat, DemiUser>();
   let userProfiles = Map.empty<Principal, UserProfile>();
-  
+
   // Username to Principal mapping for login
   let userCredentials = Map.empty<Text, (Principal, Text)>(); // username -> (principal, password)
   let sessionTokens = Map.empty<Text, Principal>(); // token -> principal
+
+  var isStudentSeeded = false;
 
   // User profile management (required by frontend)
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
@@ -75,6 +101,7 @@ actor {
 
   // Authentication functions
   public shared ({ caller }) func login(username : Text, password : Text) : async ?Text {
+    // Login is accessible to guests (anonymous users)
     switch (userCredentials.get(username)) {
       case (null) { null };
       case (?(principal, storedPassword)) {
@@ -91,10 +118,22 @@ actor {
   };
 
   public shared ({ caller }) func logout(token : Text) : async () {
-    sessionTokens.remove(token);
+    // Verify the caller owns the token being logged out
+    switch (sessionTokens.get(token)) {
+      case (null) {
+        // Token doesn't exist, silently succeed
+      };
+      case (?principal) {
+        if (caller != principal) {
+          Runtime.trap("Unauthorized: Can only logout your own session");
+        };
+        sessionTokens.remove(token);
+      };
+    };
   };
 
   public query func validateToken(token : Text) : async ?Principal {
+    // Public query for token validation
     sessionTokens.get(token);
   };
 
@@ -107,14 +146,15 @@ actor {
       Runtime.trap("Unauthorized: Only authenticated users can view dashboard");
     };
 
-    var studentCount = 0;
-    var teacherCount = 0;
+    // Use students map size for student count
+    let studentCount = students.size();
 
+    var teacherCount = 0;
     for ((_, profile) in userProfiles.entries()) {
       switch (profile.schoolRole) {
-        case (#Student) { studentCount += 1 };
         case (#Teacher) { teacherCount += 1 };
         case (#Admin) { /* don't count admins */ };
+        case (#Student) { /* already counted */ };
       };
     };
 
@@ -180,16 +220,92 @@ actor {
     };
   };
 
+  // Student Management System
+  public shared ({ caller }) func addStudent(student : Student) : async Student {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can add students");
+    };
+    students.add(student.id, student);
+    student;
+  };
+
+  public query ({ caller }) func getStudentById(id : Nat) : async ?Student {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view student data");
+    };
+    students.get(id);
+  };
+
+  public query ({ caller }) func getAllStudents() : async [Student] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view student data");
+    };
+    let iter = students.values();
+    let studentsArray = iter.toArray();
+    studentsArray;
+  };
+
+  public shared ({ caller }) func updateStudent(student : Student) : async Student {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can update students");
+    };
+
+    switch (students.get(student.id)) {
+      case (null) {
+        Runtime.trap("Student does not exist");
+      };
+      case (?_) {
+        students.add(student.id, student);
+        student;
+      };
+    };
+  };
+
+  public shared ({ caller }) func deleteStudent(id : Nat) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can delete students");
+    };
+
+    switch (students.get(id)) {
+      case (null) {
+        Runtime.trap("Student does not exist");
+      };
+      case (?_) {
+        students.remove(id);
+      };
+    };
+  };
+
+  public query ({ caller }) func getStudentCount() : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can view student statistics");
+    };
+    students.size();
+  };
+
+  // Seed students function
+  public shared ({ caller }) func seedStudents(studentSeed : [Student]) : async () {
+    if (not AccessControl.isAdmin(accessControlState, caller)) {
+      Runtime.trap("Unauthorized: Only admins can seed students");
+    };
+
+    if (isStudentSeeded) {
+      Runtime.trap("Students already seeded");
+    };
+
+    for (seedStudent in studentSeed.values()) {
+      students.add(seedStudent.id, seedStudent);
+    };
+
+    isStudentSeeded := true;
+  };
+
   // Seed demo users (called during initialization)
   public shared ({ caller }) func seedDemoUsers() : async () {
     if (not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Only admins can seed demo users");
     };
 
-    // Note: In a real implementation, you would create actual principals
-    // For demo purposes, we're using placeholder principals
-    // These would need to be replaced with actual principal IDs
-    
     // This is a simplified version - actual implementation would require
     // proper principal management and password hashing
   };

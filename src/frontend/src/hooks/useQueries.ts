@@ -74,7 +74,7 @@ export function useDashboardStats() {
   return useQuery<{ totalStudents: bigint; totalTeachers: bigint }>({
     queryKey: ["dashboardStats"],
     queryFn: async () => ({
-      totalStudents: BigInt(120),
+      totalStudents: BigInt(520),
       totalTeachers: BigInt(15),
     }),
   });

@@ -11,6 +11,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import LoginPage from "./pages/LoginPage";
 import ReportsPage from "./pages/ReportsPage";
+import StudentsPage from "./pages/StudentsPage";
 import SystemSettingsPage from "./pages/SystemSettingsPage";
 import UserManagementPage from "./pages/UserManagementPage";
 
@@ -66,6 +67,12 @@ const reportsRoute = createRoute({
   component: ReportsPage,
 });
 
+const studentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/students",
+  component: StudentsPage,
+});
+
 const catchAllRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "*",
@@ -80,6 +87,7 @@ const routeTree = rootRoute.addChildren([
   userManagementRoute,
   systemSettingsRoute,
   reportsRoute,
+  studentsRoute,
   catchAllRoute,
 ]);
 

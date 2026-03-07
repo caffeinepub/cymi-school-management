@@ -66,8 +66,8 @@ function getMenuItems(role: string): NavItem[] {
         icon: <GraduationCap className="w-5 h-5" />,
         groupOcid: "sidebar.students_group_toggle",
         children: [
-          { label: "All Students" },
-          { label: "Add Student" },
+          { label: "All Students", href: "/students" },
+          { label: "Add Student", href: "/students" },
           { label: "Attendance" },
         ],
       },

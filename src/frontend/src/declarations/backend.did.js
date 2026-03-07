@@ -19,6 +19,24 @@ export const DemiUser = IDL.Record({
   'lastName' : IDL.Text,
   'firstName' : IDL.Text,
 });
+export const Student = IDL.Record({
+  'id' : IDL.Nat,
+  'dob' : IDL.Text,
+  'joinDate' : IDL.Text,
+  'feeStatus' : IDL.Text,
+  'parentPhone' : IDL.Text,
+  'section' : IDL.Text,
+  'email' : IDL.Text,
+  'attendancePct' : IDL.Nat,
+  'grade' : IDL.Nat,
+  'address' : IDL.Text,
+  'gender' : IDL.Text,
+  'admissionNo' : IDL.Text,
+  'phone' : IDL.Text,
+  'lastName' : IDL.Text,
+  'parentName' : IDL.Text,
+  'firstName' : IDL.Text,
+});
 export const SchoolRole = IDL.Variant({
   'Teacher' : IDL.Null,
   'Student' : IDL.Null,
@@ -38,7 +56,10 @@ export const idlService = IDL.Service({
       [DemiUser],
       [],
     ),
+  'addStudent' : IDL.Func([Student], [Student], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'deleteStudent' : IDL.Func([IDL.Nat], [], []),
+  'getAllStudents' : IDL.Func([], [IDL.Vec(Student)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getDashboardStats' : IDL.Func(
@@ -47,6 +68,8 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getDemiUserById' : IDL.Func([IDL.Nat], [IDL.Opt(DemiUser)], ['query']),
+  'getStudentById' : IDL.Func([IDL.Nat], [IDL.Opt(Student)], ['query']),
+  'getStudentCount' : IDL.Func([], [IDL.Nat], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -58,12 +81,14 @@ export const idlService = IDL.Service({
   'removeDemiUser' : IDL.Func([IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'seedDemoUsers' : IDL.Func([], [], []),
+  'seedStudents' : IDL.Func([IDL.Vec(Student)], [], []),
   'totalDemiUsers' : IDL.Func([], [IDL.Nat], ['query']),
   'updateDemiUser' : IDL.Func(
       [IDL.Nat, IDL.Text, IDL.Text, UserRole],
       [DemiUser],
       [],
     ),
+  'updateStudent' : IDL.Func([Student], [Student], []),
   'validateToken' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Principal)], ['query']),
 });
 
@@ -79,6 +104,24 @@ export const idlFactory = ({ IDL }) => {
     'id' : IDL.Nat,
     'role' : UserRole,
     'lastName' : IDL.Text,
+    'firstName' : IDL.Text,
+  });
+  const Student = IDL.Record({
+    'id' : IDL.Nat,
+    'dob' : IDL.Text,
+    'joinDate' : IDL.Text,
+    'feeStatus' : IDL.Text,
+    'parentPhone' : IDL.Text,
+    'section' : IDL.Text,
+    'email' : IDL.Text,
+    'attendancePct' : IDL.Nat,
+    'grade' : IDL.Nat,
+    'address' : IDL.Text,
+    'gender' : IDL.Text,
+    'admissionNo' : IDL.Text,
+    'phone' : IDL.Text,
+    'lastName' : IDL.Text,
+    'parentName' : IDL.Text,
     'firstName' : IDL.Text,
   });
   const SchoolRole = IDL.Variant({
@@ -100,7 +143,10 @@ export const idlFactory = ({ IDL }) => {
         [DemiUser],
         [],
       ),
+    'addStudent' : IDL.Func([Student], [Student], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'deleteStudent' : IDL.Func([IDL.Nat], [], []),
+    'getAllStudents' : IDL.Func([], [IDL.Vec(Student)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getDashboardStats' : IDL.Func(
@@ -109,6 +155,8 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getDemiUserById' : IDL.Func([IDL.Nat], [IDL.Opt(DemiUser)], ['query']),
+    'getStudentById' : IDL.Func([IDL.Nat], [IDL.Opt(Student)], ['query']),
+    'getStudentCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -120,12 +168,14 @@ export const idlFactory = ({ IDL }) => {
     'removeDemiUser' : IDL.Func([IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'seedDemoUsers' : IDL.Func([], [], []),
+    'seedStudents' : IDL.Func([IDL.Vec(Student)], [], []),
     'totalDemiUsers' : IDL.Func([], [IDL.Nat], ['query']),
     'updateDemiUser' : IDL.Func(
         [IDL.Nat, IDL.Text, IDL.Text, UserRole],
         [DemiUser],
         [],
       ),
+    'updateStudent' : IDL.Func([Student], [Student], []),
     'validateToken' : IDL.Func([IDL.Text], [IDL.Opt(IDL.Principal)], ['query']),
   });
 };
