@@ -7,13 +7,20 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
+import AttendancePage from "./pages/AttendancePage";
 import DashboardPage from "./pages/DashboardPage";
 import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import LoginPage from "./pages/LoginPage";
 import ReportsPage from "./pages/ReportsPage";
+import StudentProfilePage from "./pages/StudentProfilePage";
 import StudentsPage from "./pages/StudentsPage";
 import SystemSettingsPage from "./pages/SystemSettingsPage";
 import UserManagementPage from "./pages/UserManagementPage";
+import TransportAssignmentsPage from "./pages/transport/TransportAssignmentsPage";
+import TransportDriversPage from "./pages/transport/TransportDriversPage";
+import TransportReportsPage from "./pages/transport/TransportReportsPage";
+import TransportRoutesPage from "./pages/transport/TransportRoutesPage";
+import TransportVehiclesPage from "./pages/transport/TransportVehiclesPage";
 
 // Root layout — just renders the outlet + toaster
 const rootRoute = createRootRoute({
@@ -73,6 +80,48 @@ const studentsRoute = createRoute({
   component: StudentsPage,
 });
 
+const studentProfileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/students/$id",
+  component: StudentProfilePage,
+});
+
+const attendanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/attendance",
+  component: AttendancePage,
+});
+
+const transportRoutesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/transport/routes",
+  component: TransportRoutesPage,
+});
+
+const transportVehiclesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/transport/vehicles",
+  component: TransportVehiclesPage,
+});
+
+const transportDriversRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/transport/drivers",
+  component: TransportDriversPage,
+});
+
+const transportAssignmentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/transport/assignments",
+  component: TransportAssignmentsPage,
+});
+
+const transportReportsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/transport/reports",
+  component: TransportReportsPage,
+});
+
 const catchAllRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "*",
@@ -88,6 +137,13 @@ const routeTree = rootRoute.addChildren([
   systemSettingsRoute,
   reportsRoute,
   studentsRoute,
+  studentProfileRoute,
+  attendanceRoute,
+  transportRoutesRoute,
+  transportVehiclesRoute,
+  transportDriversRoute,
+  transportAssignmentsRoute,
+  transportReportsRoute,
   catchAllRoute,
 ]);
 

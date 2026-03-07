@@ -5,10 +5,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Link } from "@tanstack/react-router";
 import {
   BarChart2,
   BookOpen,
   BookOpenCheck,
+  Bus,
   CalendarCheck,
   ChevronDown,
   ChevronRight,
@@ -67,8 +69,8 @@ function getMenuItems(role: string): NavItem[] {
         groupOcid: "sidebar.students_group_toggle",
         children: [
           { label: "All Students", href: "/students" },
-          { label: "Add Student", href: "/students" },
-          { label: "Attendance" },
+          { label: "Add Student", href: "/students?action=add" },
+          { label: "Attendance", href: "/attendance" },
         ],
       },
       {
@@ -96,6 +98,18 @@ function getMenuItems(role: string): NavItem[] {
         icon: <CreditCard className="w-5 h-5" />,
         groupOcid: "sidebar.finance_group_toggle",
         children: [{ label: "Fee Management" }, { label: "Reports" }],
+      },
+      {
+        label: "Transportation",
+        icon: <Bus className="w-5 h-5" />,
+        groupOcid: "sidebar.transportation_group_toggle",
+        children: [
+          { label: "Routes", href: "/transport/routes" },
+          { label: "Vehicles", href: "/transport/vehicles" },
+          { label: "Drivers", href: "/transport/drivers" },
+          { label: "Student Assignment", href: "/transport/assignments" },
+          { label: "Reports", href: "/transport/reports" },
+        ],
       },
       {
         label: "User Management",
@@ -337,13 +351,13 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                       >
                         <div className="ml-4 pl-3 border-l border-white/10 mt-0.5 mb-1">
                           {item.children!.map((child) => (
-                            <a
+                            <Link
                               key={child.label}
-                              href={child.href ?? "#"}
+                              to={child.href ?? "/dashboard"}
                               className="sidebar-child-item flex items-center py-2 px-3 rounded-md text-sm"
                             >
                               {child.label}
-                            </a>
+                            </Link>
                           ))}
                         </div>
                       </div>
@@ -354,9 +368,9 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
 
               // Leaf item
               return expanded ? (
-                <a
+                <Link
                   key={item.label}
-                  href={item.href ?? "#"}
+                  to={item.href ?? "/dashboard"}
                   data-ocid={item.ocid}
                   className="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-md"
                 >
@@ -366,18 +380,18 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                   <span className="text-sm font-medium text-white/90 truncate">
                     {item.label}
                   </span>
-                </a>
+                </Link>
               ) : (
                 <Tooltip key={item.label}>
                   <TooltipTrigger asChild>
-                    <a
-                      href={item.href ?? "#"}
+                    <Link
+                      to={item.href ?? "/dashboard"}
                       data-ocid={item.ocid}
                       className="sidebar-item flex items-center justify-center px-3 py-2.5 rounded-md"
                       aria-label={item.label}
                     >
                       <span className="text-white/70">{item.icon}</span>
-                    </a>
+                    </Link>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="sidebar-tooltip">
                     {item.label}

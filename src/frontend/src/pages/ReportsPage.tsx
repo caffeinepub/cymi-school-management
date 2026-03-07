@@ -1,9 +1,17 @@
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useNavigate } from "@tanstack/react-router";
 import {
   BarChart2,
   Bell,
   Download,
+  FileSpreadsheet,
+  FileText,
   Loader2,
   TrendingUp,
   Users,
@@ -28,6 +36,7 @@ import {
 import { toast } from "sonner";
 import Sidebar from "../components/Sidebar";
 import { useCallerUserProfile, useLogout } from "../hooks/useQueries";
+import { exportToExcel, exportToPDF } from "../utils/exportUtils";
 
 // ── Chart Data ────────────────────────────────────────────────────────────────
 
@@ -232,6 +241,71 @@ export default function ReportsPage() {
     navigate({ to: "/" });
   };
 
+  function handleExportExcel() {
+    const summaryRows = [
+      { Metric: "Total Students", Value: "520" },
+      { Metric: "Total Teachers", Value: "160" },
+      { Metric: "Avg Attendance", Value: "91%" },
+      { Metric: "Fee Collected", Value: "₹32.4L" },
+    ];
+    const attendanceRows = ATTENDANCE_DATA.map((d) => ({
+      Day: d.day,
+      "Attendance (%)": d.attendance,
+    }));
+    const feeRows = FEE_DATA.map((d) => ({
+      Month: d.month,
+      "Fee Collected (₹)": d.collected,
+    }));
+    const enrollmentRows = ENROLLMENT_DATA.map((d) => ({
+      "Grade Group": d.name,
+      "Share (%)": d.value,
+      "Student Count": Math.round((d.value / 100) * 520),
+    }));
+    exportToExcel("cymi-reports", [
+      { name: "Summary", rows: summaryRows },
+      { name: "Attendance", rows: attendanceRows },
+      { name: "Fee Collection", rows: feeRows },
+      { name: "Enrollment", rows: enrollmentRows },
+    ]);
+    toast.success("Excel report downloaded");
+  }
+
+  function handleExportPDF() {
+    const dateStr = new Date().toLocaleDateString("en-IN", {
+      dateStyle: "long",
+    });
+    const columns = ["Metric", "Value"];
+    const rows: (string | number)[][] = [
+      ["Total Students", "520"],
+      ["Total Teachers", "160"],
+      ["Avg Attendance", "91%"],
+      ["Fee Collected", "₹32.4L"],
+      ["---", "---"],
+      ...ATTENDANCE_DATA.map((d) => [
+        `Attendance — ${d.day}`,
+        `${d.attendance}%`,
+      ]),
+      ["---", "---"],
+      ...FEE_DATA.map((d) => [
+        `Fee — ${d.month}`,
+        `₹${d.collected.toLocaleString("en-IN")}`,
+      ]),
+      ["---", "---"],
+      ...ENROLLMENT_DATA.map((d) => [
+        d.name,
+        `${d.value}% (${Math.round((d.value / 100) * 520)} students)`,
+      ]),
+    ];
+    exportToPDF(
+      "cymi-reports",
+      "CYMI School Management — Reports",
+      columns,
+      rows,
+      `Generated on ${dateStr}`,
+    );
+    toast.success("PDF report downloaded");
+  }
+
   const userName = profile
     ? `${profile.firstName} ${profile.lastName}`.trim()
     : "User";
@@ -315,20 +389,36 @@ export default function ReportsPage() {
                     className="border-none outline-none bg-transparent text-sm text-gray-700 cursor-pointer"
                   />
                 </div>
-                <Button
-                  data-ocid="reports.export.button"
-                  onClick={() =>
-                    toast.info("Export feature coming soon.", {
-                      description:
-                        "PDF and Excel export will be available in the next release.",
-                    })
-                  }
-                  variant="outline"
-                  className="flex items-center gap-2 border-gray-200 text-gray-700 hover:bg-gray-50"
-                >
-                  <Download className="w-4 h-4" />
-                  Export Report
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      data-ocid="reports.export.button"
+                      variant="outline"
+                      className="flex items-center gap-2 border-gray-200 text-gray-700 hover:bg-gray-50"
+                    >
+                      <Download className="w-4 h-4" />
+                      Export Report
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem
+                      data-ocid="reports.export.excel_button"
+                      onClick={handleExportExcel}
+                      className="gap-2 cursor-pointer"
+                    >
+                      <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                      Export Excel
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      data-ocid="reports.export.pdf_button"
+                      onClick={handleExportPDF}
+                      className="gap-2 cursor-pointer"
+                    >
+                      <FileText className="w-4 h-4 text-red-500" />
+                      Export PDF
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </motion.div>
 

@@ -18,6 +18,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -28,12 +34,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import {
   Table,
   TableBody,
@@ -47,8 +47,11 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   ChevronLeft,
   ChevronRight,
+  Download,
   Edit,
   Eye,
+  FileSpreadsheet,
+  FileText,
   Loader2,
   Plus,
   Search,
@@ -60,294 +63,9 @@ import { motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import Sidebar from "../components/Sidebar";
+import { SEED_DATA, type Student } from "../data/students";
 import { useCallerUserProfile, useLogout } from "../hooks/useQueries";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface Student {
-  id: number;
-  admissionNo: string;
-  firstName: string;
-  lastName: string;
-  grade: number;
-  section: string;
-  gender: string;
-  dob: string;
-  phone: string;
-  email: string;
-  parentName: string;
-  parentPhone: string;
-  address: string;
-  feeStatus: string;
-  attendancePct: number;
-  joinDate: string;
-}
-
-// ─── Name Data ────────────────────────────────────────────────────────────────
-
-const FIRST_NAMES_MALE = [
-  "Aarav",
-  "Arjun",
-  "Amit",
-  "Ankur",
-  "Aditya",
-  "Bharat",
-  "Deepak",
-  "Dev",
-  "Dinesh",
-  "Girish",
-  "Harsh",
-  "Hemant",
-  "Ishaan",
-  "Jayesh",
-  "Karan",
-  "Kunal",
-  "Lakshman",
-  "Mahesh",
-  "Manish",
-  "Nikhil",
-  "Nilesh",
-  "Om",
-  "Piyush",
-  "Prasad",
-  "Rahul",
-  "Raj",
-  "Rajesh",
-  "Rakesh",
-  "Ram",
-  "Ramesh",
-  "Ravi",
-  "Ritesh",
-  "Rohit",
-  "Sachin",
-  "Sagar",
-  "Sahil",
-  "Sandeep",
-  "Sanjay",
-  "Shivam",
-  "Suresh",
-  "Tarun",
-  "Tushar",
-  "Uday",
-  "Vijay",
-  "Vikas",
-  "Vinay",
-  "Vishal",
-  "Vivek",
-  "Yash",
-  "Yogesh",
-];
-
-const FIRST_NAMES_FEMALE = [
-  "Aisha",
-  "Ananya",
-  "Anjali",
-  "Ankita",
-  "Anushka",
-  "Bhavna",
-  "Deepa",
-  "Divya",
-  "Geeta",
-  "Hina",
-  "Isha",
-  "Jyoti",
-  "Kajal",
-  "Kavita",
-  "Khushi",
-  "Komal",
-  "Laxmi",
-  "Madhuri",
-  "Manisha",
-  "Meena",
-  "Meera",
-  "Minal",
-  "Nisha",
-  "Pallavi",
-  "Pooja",
-  "Pratibha",
-  "Priya",
-  "Priyanka",
-  "Radha",
-  "Rashmi",
-  "Rekha",
-  "Riya",
-  "Rupali",
-  "Sadhana",
-  "Sangeeta",
-  "Shalini",
-  "Shilpa",
-  "Shruti",
-  "Sneha",
-  "Sonal",
-  "Sunita",
-  "Swati",
-  "Tanvi",
-  "Usha",
-  "Vandana",
-  "Varsha",
-  "Vidya",
-  "Yashoda",
-  "Zara",
-  "Nidhi",
-];
-
-const LAST_NAMES = [
-  "Sharma",
-  "Verma",
-  "Patel",
-  "Singh",
-  "Kumar",
-  "Gupta",
-  "Joshi",
-  "Mehta",
-  "Shah",
-  "Yadav",
-  "Mishra",
-  "Tiwari",
-  "Pandey",
-  "Jain",
-  "Agrawal",
-  "Nair",
-  "Reddy",
-  "Rao",
-  "Iyer",
-  "Pillai",
-  "Naidu",
-  "Chaudhary",
-  "Sinha",
-  "Bose",
-  "Das",
-  "Ghosh",
-  "Banerjee",
-  "Mukherjee",
-  "Chatterjee",
-  "Chakraborty",
-  "Malhotra",
-  "Kapoor",
-  "Khanna",
-  "Arora",
-  "Bhatia",
-  "Mehra",
-  "Chopra",
-  "Sood",
-  "Bajaj",
-  "Bhatt",
-];
-
-const CITIES = [
-  "Mumbai",
-  "Delhi",
-  "Bangalore",
-  "Hyderabad",
-  "Chennai",
-  "Kolkata",
-  "Pune",
-  "Ahmedabad",
-  "Jaipur",
-  "Surat",
-  "Lucknow",
-  "Nagpur",
-  "Visakhapatnam",
-  "Indore",
-  "Thane",
-  "Bhopal",
-  "Patna",
-  "Vadodara",
-  "Ludhiana",
-  "Agra",
-];
-
-const STREETS = [
-  "MG Road",
-  "Station Road",
-  "Gandhi Nagar",
-  "Patel Colony",
-  "Nehru Street",
-  "Civil Lines",
-  "Shivaji Nagar",
-  "Rajaji Road",
-  "Tilak Marg",
-  "Sadar Bazar",
-];
-
-// ─── Seed Data Generator ──────────────────────────────────────────────────────
-
-function seededRandom(seed: number): () => number {
-  let s = seed;
-  return () => {
-    s = (s * 1664525 + 1013904223) & 0xffffffff;
-    return (s >>> 0) / 0xffffffff;
-  };
-}
-
-function generateStudents(): Student[] {
-  const rng = seededRandom(42);
-  const pick = <T,>(arr: T[]) => arr[Math.floor(rng() * arr.length)];
-  const between = (min: number, max: number) =>
-    Math.floor(rng() * (max - min + 1)) + min;
-
-  const students: Student[] = [];
-
-  for (let i = 1; i <= 520; i++) {
-    const isMale = rng() < 0.52;
-    const firstName = isMale
-      ? pick(FIRST_NAMES_MALE)
-      : pick(FIRST_NAMES_FEMALE);
-    const lastName = pick(LAST_NAMES);
-    const grade = between(1, 12);
-    const section = ["A", "B", "C", "D"][Math.floor(rng() * 4)];
-    const genderVal = isMale ? "Male" : "Female";
-    const year = between(2020, 2025);
-    const month = between(1, 12);
-    const day = between(1, 28);
-    const joinDate = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-    const dobYear = new Date().getFullYear() - 5 - grade - between(0, 2);
-    const dobMonth = between(1, 12);
-    const dobDay = between(1, 28);
-    const dob = `${dobYear}-${String(dobMonth).padStart(2, "0")}-${String(dobDay).padStart(2, "0")}`;
-    const admYear = year;
-    const admissionNo = `ADM${admYear}${String(i).padStart(3, "0")}`;
-
-    const feeRoll = rng();
-    const feeStatus =
-      feeRoll < 0.7 ? "Paid" : feeRoll < 0.9 ? "Pending" : "Overdue";
-
-    const attendancePct = between(65, 100);
-    const phone = `9${String(between(100000000, 999999999))}`;
-    const parentPhone = `8${String(between(100000000, 999999999))}`;
-    const parentFirstName = isMale
-      ? pick(FIRST_NAMES_MALE)
-      : pick(FIRST_NAMES_MALE);
-    const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@cymi.edu.in`;
-    const city = pick(CITIES);
-    const street = pick(STREETS);
-    const houseNo = between(1, 500);
-    const address = `${houseNo}, ${street}, ${city}`;
-
-    students.push({
-      id: i,
-      admissionNo,
-      firstName,
-      lastName,
-      grade,
-      section,
-      gender: genderVal,
-      dob,
-      phone,
-      email,
-      parentName: `${parentFirstName} ${lastName}`,
-      parentPhone,
-      address,
-      feeStatus,
-      attendancePct,
-      joinDate,
-    });
-  }
-
-  return students;
-}
-
-const SEED_DATA = generateStudents();
+import { exportToExcel, exportToPDF } from "../utils/exportUtils";
 
 // ─── Helper Components ────────────────────────────────────────────────────────
 
@@ -390,60 +108,6 @@ function FeeStatusBadge({ status }: { status: string }) {
     <Badge className="bg-red-100 text-red-700 border border-red-200 hover:bg-red-100">
       Overdue
     </Badge>
-  );
-}
-
-// ─── SVG Attendance Ring ──────────────────────────────────────────────────────
-
-function AttendanceRingLarge({ pct }: { pct: number }) {
-  const radius = 52;
-  const circ = 2 * Math.PI * radius;
-  const [offset, setOffset] = useState(circ);
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      setOffset(circ * (1 - pct / 100));
-    }, 120);
-    return () => clearTimeout(t);
-  }, [pct, circ]);
-
-  const color = pct >= 85 ? "#10B981" : pct >= 70 ? "#F59E0B" : "#EF4444";
-
-  return (
-    <div className="relative w-32 h-32 flex items-center justify-center flex-shrink-0">
-      <svg
-        width="128"
-        height="128"
-        viewBox="0 0 128 128"
-        className="-rotate-90"
-        aria-hidden="true"
-      >
-        <circle
-          cx={64}
-          cy={64}
-          r={radius}
-          fill="none"
-          stroke="#e5e7eb"
-          strokeWidth={12}
-        />
-        <circle
-          cx={64}
-          cy={64}
-          r={radius}
-          fill="none"
-          stroke={color}
-          strokeWidth={12}
-          strokeLinecap="round"
-          strokeDasharray={circ}
-          strokeDashoffset={offset}
-          style={{ transition: "stroke-dashoffset 1s ease-out" }}
-        />
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-bold text-gray-800">{pct}%</span>
-        <span className="text-xs text-gray-400">Attendance</span>
-      </div>
-    </div>
   );
 }
 
@@ -834,107 +498,6 @@ function StudentFormDialog({
   );
 }
 
-// ─── Student Detail Drawer ────────────────────────────────────────────────────
-
-interface StudentDrawerProps {
-  student: Student | null;
-  open: boolean;
-  onClose: () => void;
-  onEdit: (s: Student) => void;
-}
-
-function StudentDrawer({ student, open, onClose, onEdit }: StudentDrawerProps) {
-  if (!student) return null;
-
-  const initials =
-    `${student.firstName[0]}${student.lastName[0]}`.toUpperCase();
-
-  return (
-    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent
-        data-ocid="students.sheet"
-        className="w-full sm:max-w-lg overflow-y-auto"
-        side="right"
-      >
-        <SheetHeader className="mb-6">
-          <SheetTitle>Student Profile</SheetTitle>
-        </SheetHeader>
-
-        {/* Avatar + name */}
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0 text-white text-xl font-bold shadow-md">
-            {initials}
-          </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">
-              {student.firstName} {student.lastName}
-            </h2>
-            <p className="text-sm text-gray-500">
-              Grade {student.grade} – Section {student.section}
-            </p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {student.admissionNo}
-            </p>
-          </div>
-        </div>
-
-        {/* Attendance Ring */}
-        <div className="flex justify-center mb-6">
-          <AttendanceRingLarge pct={student.attendancePct} />
-        </div>
-
-        {/* Fee + Gender badges */}
-        <div className="flex items-center gap-2 justify-center mb-6">
-          <FeeStatusBadge status={student.feeStatus} />
-          <Badge variant="outline">{student.gender}</Badge>
-        </div>
-
-        {/* Details grid */}
-        <div className="grid grid-cols-2 gap-4 text-sm mb-6">
-          {[
-            { label: "Date of Birth", value: student.dob },
-            { label: "Join Date", value: student.joinDate },
-            { label: "Phone", value: student.phone },
-            { label: "Parent Name", value: student.parentName },
-            { label: "Parent Phone", value: student.parentPhone },
-            { label: "Email", value: student.email },
-          ].map(({ label, value }) => (
-            <div key={label}>
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                {label}
-              </p>
-              <p className="font-medium text-gray-800 truncate">
-                {value || "—"}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Address */}
-        <div className="mb-6">
-          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">
-            Address
-          </p>
-          <p className="text-sm text-gray-700">{student.address || "—"}</p>
-        </div>
-
-        {/* Edit button */}
-        <Button
-          data-ocid="students.edit_button"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-          onClick={() => {
-            onClose();
-            onEdit(student);
-          }}
-        >
-          <Edit className="mr-2 h-4 w-4" />
-          Edit Student
-        </Button>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
 // ─── Main StudentsPage ────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 25;
@@ -958,10 +521,17 @@ export default function StudentsPage() {
   // ── Modals ──
   const [addEditOpen, setAddEditOpen] = useState(false);
   const [editTarget, setEditTarget] = useState<Student | null>(null);
-  const [viewTarget, setViewTarget] = useState<Student | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Student | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  // ── Auto-open add dialog from ?action=add ──
+  useEffect(() => {
+    const action = new URLSearchParams(window.location.search).get("action");
+    if (action === "add") {
+      setEditTarget(null);
+      setAddEditOpen(true);
+    }
+  }, []);
 
   // ── Auth redirect ──
   useEffect(() => {
@@ -1040,8 +610,7 @@ export default function StudentsPage() {
   }
 
   function openView(s: Student) {
-    setViewTarget(s);
-    setDrawerOpen(true);
+    navigate({ to: "/students/$id", params: { id: String(s.id) } });
   }
 
   function openDelete(s: Student) {
@@ -1070,6 +639,80 @@ export default function StudentsPage() {
     toast.success(`${deleteTarget.firstName} ${deleteTarget.lastName} deleted`);
     setDeleteOpen(false);
     setDeleteTarget(null);
+  }
+
+  // ── Export helpers ──
+  const EXPORT_COLUMNS = [
+    "#",
+    "Admission No",
+    "Name",
+    "Grade",
+    "Section",
+    "Gender",
+    "DOB",
+    "Phone",
+    "Email",
+    "Parent Name",
+    "Parent Phone",
+    "Fee Status",
+    "Attendance %",
+    "Join Date",
+  ];
+
+  function buildExportRows() {
+    return filtered.map((s, i) => ({
+      "#": i + 1,
+      "Admission No": s.admissionNo,
+      Name: `${s.firstName} ${s.lastName}`,
+      Grade: s.grade,
+      Section: s.section,
+      Gender: s.gender,
+      DOB: s.dob,
+      Phone: s.phone,
+      Email: s.email,
+      "Parent Name": s.parentName,
+      "Parent Phone": s.parentPhone,
+      "Fee Status": s.feeStatus,
+      "Attendance %": s.attendancePct,
+      "Join Date": s.joinDate,
+    }));
+  }
+
+  function buildPdfRows(): (string | number)[][] {
+    return filtered.map((s, i) => [
+      i + 1,
+      s.admissionNo,
+      `${s.firstName} ${s.lastName}`,
+      s.grade,
+      s.section,
+      s.gender,
+      s.dob,
+      s.phone,
+      s.email,
+      s.parentName,
+      s.parentPhone,
+      s.feeStatus,
+      `${s.attendancePct}%`,
+      s.joinDate,
+    ]);
+  }
+
+  function handleExportExcel() {
+    exportToExcel("students-export", [
+      { name: "Students", rows: buildExportRows() },
+    ]);
+    toast.success("Excel file downloaded");
+  }
+
+  function handleExportPDF() {
+    exportToPDF(
+      "students-export",
+      "CYMI — Student Directory",
+      EXPORT_COLUMNS,
+      buildPdfRows(),
+      `Total ${filtered.length} students exported on ${new Date().toLocaleDateString("en-IN")}`,
+    );
+    toast.success("PDF file downloaded");
   }
 
   if (profileLoading) {
@@ -1119,6 +762,36 @@ export default function StudentsPage() {
                 <Users className="w-4 h-4" />
                 {filtered.length} / {students.length}
               </span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    data-ocid="students.secondary_button"
+                    variant="outline"
+                    className="gap-2 border-gray-200 text-gray-700 hover:bg-gray-50"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem
+                    data-ocid="students.export.excel_button"
+                    onClick={handleExportExcel}
+                    className="gap-2 cursor-pointer"
+                  >
+                    <FileSpreadsheet className="w-4 h-4 text-green-600" />
+                    Export Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    data-ocid="students.export.pdf_button"
+                    onClick={handleExportPDF}
+                    className="gap-2 cursor-pointer"
+                  >
+                    <FileText className="w-4 h-4 text-red-500" />
+                    Export PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button
                 data-ocid="students.primary_button"
                 onClick={openAdd}
@@ -1379,7 +1052,7 @@ export default function StudentsPage() {
                                 type="button"
                                 data-ocid={`students.secondary_button.${ocidIdx}`}
                                 onClick={() => openView(s)}
-                                title="View"
+                                title="View Profile"
                                 className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
                               >
                                 <Eye className="w-4 h-4" />
@@ -1491,19 +1164,6 @@ export default function StudentsPage() {
         }}
         initial={editTarget}
         onSave={handleSave}
-      />
-
-      {/* Detail Drawer */}
-      <StudentDrawer
-        student={viewTarget}
-        open={drawerOpen}
-        onClose={() => {
-          setDrawerOpen(false);
-          setViewTarget(null);
-        }}
-        onEdit={(s) => {
-          openEdit(s);
-        }}
       />
 
       {/* Delete Confirmation */}
