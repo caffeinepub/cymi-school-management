@@ -97,7 +97,14 @@ function getMenuItems(role: string): NavItem[] {
         label: "Finance",
         icon: <CreditCard className="w-5 h-5" />,
         groupOcid: "sidebar.finance_group_toggle",
-        children: [{ label: "Fee Management" }, { label: "Reports" }],
+        children: [
+          { label: "Fee Structure", href: "/fees/structure" },
+          { label: "Fee Collection", href: "/fees/collection" },
+          { label: "Fee Register", href: "/fees/register" },
+          { label: "Receipts", href: "/fees/receipts" },
+          { label: "Fee History", href: "/fees/history" },
+          { label: "Fee Reports", href: "/fees/reports" },
+        ],
       },
       {
         label: "Transportation",

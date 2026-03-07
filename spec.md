@@ -1,39 +1,36 @@
 # CYMI School Management
 
 ## Current State
-- Full-stack school management app with Motoko backend + React/TypeScript frontend
-- Pages: Login, Dashboard, Students, Attendance, StudentProfile, UserManagement, SystemSettings, Reports
-- Sidebar with collapsible groups for Admin/SuperAdmin/Parent/Student roles
-- 520 student records in frontend data layer
-- Charts (donut, bar, area) on dashboard
-- Export to Excel/PDF on students, attendance, reports
+The app has: Login (4 roles), Dashboard, Students (520 members), Attendance, Transport (Routes, Vehicles, Drivers, Assignments, Reports), User Management, System Settings, Reports. Sidebar is collapsible with scroll support.
+
+Finance section in the sidebar currently has non-functional "Fee Management" and "Reports" placeholders.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Complete Transportation module with:
-  - **Routes Management**: CRUD for bus routes (route number, name, start/end points, stops list, distance)
-  - **Vehicles Management**: CRUD for vehicles (bus number, model, capacity, driver assigned, status: Active/Maintenance/Inactive)
-  - **Drivers Management**: CRUD for drivers (name, license, phone, assigned vehicle, experience)
-  - **Student Assignment**: Assign students to routes/buses with pickup point and time
-  - **Route Tracking**: Overview page showing all routes with stop details and assigned students count
-  - **Transportation Reports**: Ridership stats, route utilization, export to Excel/PDF
-- Sidebar entry: "Transportation" group with children: Routes, Vehicles, Drivers, Student Assignment, Reports
-- New routes: `/transport/routes`, `/transport/vehicles`, `/transport/drivers`, `/transport/assignments`, `/transport/reports`
+- `/fees/structure` — Fee Structure page: define fee categories (Tuition, Transport, Library, Lab, Sports, Exam, etc.), amounts per class/grade, due dates, late fee rules. Table with add/edit/delete. Export Excel/PDF.
+- `/fees/collection` — Fee Collection page: collect fees for a student by searching name/admission number. Select fee heads, apply discounts/waivers, generate receipt. Shows collection summary stats (today's collection, pending, overdue).
+- `/fees/register` — Fee Register page: full ledger view of all fee transactions across all students. Filters by class, section, fee type, month, status (paid/partial/pending/overdue). Pagination. Export Excel/PDF.
+- `/fees/receipts` — Receipts page: search and view/print/download individual payment receipts. Each receipt shows student details, fee heads, amount paid, payment method, receipt number, date.
+- `/fees/history` — Fee History page: per-student fee payment history timeline. Search student, view all past payments, outstanding balance, dues summary.
+- `/fees/reports` — Fee Reports page: charts for monthly collection trend, fee collection by class, outstanding dues breakdown. Export options.
 
 ### Modify
-- `Sidebar.tsx`: Add Transportation group (bus icon) with 5 sub-items for Admin/SuperAdmin
-- `App.tsx`: Register all 5 new transportation routes
+- `Sidebar.tsx`: Update Finance group children with hrefs for all 6 new fee pages.
+- `App.tsx`: Register 6 new routes for fee pages.
 
 ### Remove
-- Nothing removed
+- Nothing removed.
 
 ## Implementation Plan
-1. Create `src/data/transportation.ts` with mock data: 10 routes, 15 vehicles, 12 drivers, ~100 student assignments
-2. Create `src/pages/transport/TransportRoutesPage.tsx` - routes CRUD table with stops drawer
-3. Create `src/pages/transport/TransportVehiclesPage.tsx` - vehicles CRUD table
-4. Create `src/pages/transport/TransportDriversPage.tsx` - drivers CRUD table
-5. Create `src/pages/transport/TransportAssignmentsPage.tsx` - student-route assignment manager
-6. Create `src/pages/transport/TransportReportsPage.tsx` - charts + stats + export
-7. Update `Sidebar.tsx` to add Transportation group
-8. Update `App.tsx` to register new routes
+1. Create 6 fee page components in `src/frontend/src/pages/fees/`:
+   - `FeeStructurePage.tsx`
+   - `FeeCollectionPage.tsx`
+   - `FeeRegisterPage.tsx`
+   - `FeeReceiptsPage.tsx`
+   - `FeeHistoryPage.tsx`
+   - `FeeReportsPage.tsx`
+2. Each page includes: header with title + export dropdown, filter bar, data table or form, mock data, add/edit dialogs, fully wired export (Excel via SheetJS + PDF via jsPDF or print).
+3. Update `Sidebar.tsx` Finance group children with route hrefs.
+4. Update `App.tsx` with 6 new route definitions and imports.
+5. Validate (typecheck + lint + build).

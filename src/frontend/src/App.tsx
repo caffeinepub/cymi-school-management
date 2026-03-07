@@ -16,6 +16,12 @@ import StudentProfilePage from "./pages/StudentProfilePage";
 import StudentsPage from "./pages/StudentsPage";
 import SystemSettingsPage from "./pages/SystemSettingsPage";
 import UserManagementPage from "./pages/UserManagementPage";
+import FeeCollectionPage from "./pages/fees/FeeCollectionPage";
+import FeeHistoryPage from "./pages/fees/FeeHistoryPage";
+import FeeReceiptsPage from "./pages/fees/FeeReceiptsPage";
+import FeeRegisterPage from "./pages/fees/FeeRegisterPage";
+import FeeReportsPage from "./pages/fees/FeeReportsPage";
+import FeeStructurePage from "./pages/fees/FeeStructurePage";
 import TransportAssignmentsPage from "./pages/transport/TransportAssignmentsPage";
 import TransportDriversPage from "./pages/transport/TransportDriversPage";
 import TransportReportsPage from "./pages/transport/TransportReportsPage";
@@ -122,6 +128,42 @@ const transportReportsRoute = createRoute({
   component: TransportReportsPage,
 });
 
+const feeStructureRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/fees/structure",
+  component: FeeStructurePage,
+});
+
+const feeCollectionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/fees/collection",
+  component: FeeCollectionPage,
+});
+
+const feeRegisterRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/fees/register",
+  component: FeeRegisterPage,
+});
+
+const feeReceiptsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/fees/receipts",
+  component: FeeReceiptsPage,
+});
+
+const feeHistoryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/fees/history",
+  component: FeeHistoryPage,
+});
+
+const feeReportsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/fees/reports",
+  component: FeeReportsPage,
+});
+
 const catchAllRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "*",
@@ -144,6 +186,12 @@ const routeTree = rootRoute.addChildren([
   transportDriversRoute,
   transportAssignmentsRoute,
   transportReportsRoute,
+  feeStructureRoute,
+  feeCollectionRoute,
+  feeRegisterRoute,
+  feeReceiptsRoute,
+  feeHistoryRoute,
+  feeReportsRoute,
   catchAllRoute,
 ]);
 
