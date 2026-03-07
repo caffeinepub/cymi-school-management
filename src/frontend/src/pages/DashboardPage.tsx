@@ -59,9 +59,9 @@ export default function DashboardPage() {
         {/* Left: Logo + Title */}
         <div className="flex items-center gap-3">
           <img
-            src="/assets/generated/cymi-logo-transparent.dim_200x200.png"
+            src="/assets/uploads/cymi-1.PNG"
             alt="CYMI Logo"
-            className="w-10 h-10 rounded-full object-cover shadow-md border-2 border-white/30"
+            className="w-10 h-10 object-contain"
           />
           <span className="text-white font-semibold text-base tracking-wide hidden sm:inline">
             CYMI – Christ Youth Mission Institute

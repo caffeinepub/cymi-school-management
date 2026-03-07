@@ -54,9 +54,9 @@ export default function LoginPage() {
       >
         <div className="flex items-center gap-3">
           <img
-            src="/assets/generated/cymi-logo-transparent.dim_200x200.png"
+            src="/assets/uploads/cymi-1.PNG"
             alt="CYMI Logo"
-            className="w-10 h-10 rounded-full object-cover shadow-md border-2 border-white/30"
+            className="w-10 h-10 object-contain"
           />
           <span className="text-white font-semibold text-base tracking-wide hidden sm:inline">
             CYMI – Christ Youth Mission Institute
@@ -94,9 +94,9 @@ export default function LoginPage() {
                   {/* ── School Logo ── */}
                   <div className="flex justify-center mb-6">
                     <img
-                      src="/assets/generated/cymi-logo-transparent.dim_200x200.png"
+                      src="/assets/uploads/cymi-1.PNG"
                       alt="CYMI School Logo"
-                      className="w-20 h-20 rounded-full object-cover shadow-md border-4 border-gray-100"
+                      className="w-20 h-20 object-contain"
                     />
                   </div>
 
