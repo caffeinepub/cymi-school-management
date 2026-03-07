@@ -32,6 +32,7 @@ export default function DashboardPage() {
       }
     }
     localStorage.removeItem("cymi_token");
+    localStorage.removeItem("cymi_profile");
     navigate({ to: "/" });
   };
 

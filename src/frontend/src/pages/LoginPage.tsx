@@ -2,19 +2,16 @@ import { useNavigate } from "@tanstack/react-router";
 import { Loader2, Lock, User } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
-import { useActor } from "../hooks/useActor";
-import { useLogin, useSeedDemoUsers } from "../hooks/useQueries";
+import { useLogin } from "../hooks/useQueries";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { actor, isFetching } = useActor();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const loginMutation = useLogin();
-  const seedMutation = useSeedDemoUsers();
 
   // Redirect if already logged in
   useEffect(() => {
@@ -23,14 +20,6 @@ export default function LoginPage() {
       navigate({ to: "/dashboard" });
     }
   }, [navigate]);
-
-  // Seed demo users once actor is ready — intentionally excluding seedMutation from deps
-  // biome-ignore lint/correctness/useExhaustiveDependencies: seedMutation reference is stable
-  useEffect(() => {
-    if (actor && !isFetching) {
-      seedMutation.mutate();
-    }
-  }, [actor, isFetching]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

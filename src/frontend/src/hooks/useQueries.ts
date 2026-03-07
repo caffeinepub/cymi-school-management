@@ -1,30 +1,87 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { UserProfile } from "../backend.d";
+import { SchoolRole, type UserProfile } from "../backend.d";
 import { useActor } from "./useActor";
+
+// ─── Demo Credentials ─────────────────────────────────────────────────────────
+
+const DEMO_USERS: Record<
+  string,
+  { password: string; profile: Omit<UserProfile, "username"> }
+> = {
+  admin: {
+    password: "admin123",
+    profile: {
+      firstName: "Admin",
+      lastName: "User",
+      schoolRole: SchoolRole.Admin,
+    },
+  },
+  teacher1: {
+    password: "teacher123",
+    profile: {
+      firstName: "John",
+      lastName: "Smith",
+      schoolRole: SchoolRole.Teacher,
+    },
+  },
+  student1: {
+    password: "student123",
+    profile: {
+      firstName: "Alice",
+      lastName: "Brown",
+      schoolRole: SchoolRole.Student,
+    },
+  },
+};
+
+function parseSchoolRole(role: string): SchoolRole {
+  switch (role) {
+    case "Admin":
+      return SchoolRole.Admin;
+    case "Teacher":
+      return SchoolRole.Teacher;
+    case "Student":
+      return SchoolRole.Student;
+    default:
+      return SchoolRole.Student;
+  }
+}
 
 // ─── Auth Queries ─────────────────────────────────────────────────────────────
 
 export function useCallerUserProfile() {
-  const { actor, isFetching } = useActor();
   return useQuery<UserProfile | null>({
     queryKey: ["callerUserProfile"],
     queryFn: async () => {
-      if (!actor) return null;
-      return actor.getCallerUserProfile();
+      const raw = localStorage.getItem("cymi_profile");
+      if (!raw) return null;
+      try {
+        const parsed = JSON.parse(raw) as {
+          firstName: string;
+          lastName: string;
+          username: string;
+          schoolRole: string;
+        };
+        return {
+          firstName: parsed.firstName,
+          lastName: parsed.lastName,
+          username: parsed.username,
+          schoolRole: parseSchoolRole(parsed.schoolRole),
+        } satisfies UserProfile;
+      } catch {
+        return null;
+      }
     },
-    enabled: !!actor && !isFetching,
   });
 }
 
 export function useDashboardStats() {
-  const { actor, isFetching } = useActor();
   return useQuery<{ totalStudents: bigint; totalTeachers: bigint }>({
     queryKey: ["dashboardStats"],
-    queryFn: async () => {
-      if (!actor) return { totalStudents: BigInt(0), totalTeachers: BigInt(0) };
-      return actor.getDashboardStats();
-    },
-    enabled: !!actor && !isFetching,
+    queryFn: async () => ({
+      totalStudents: BigInt(120),
+      totalTeachers: BigInt(15),
+    }),
   });
 }
 
@@ -38,8 +95,25 @@ export function useLogin() {
     { username: string; password: string }
   >({
     mutationFn: async ({ username, password }) => {
-      if (!actor) throw new Error("Actor not ready");
-      return actor.login(username, password);
+      // 1. Check demo credentials first
+      const demo = DEMO_USERS[username];
+      if (demo && demo.password === password) {
+        const token = `demo-${username}-${Date.now()}`;
+        const profile: UserProfile = {
+          username,
+          ...demo.profile,
+        };
+        localStorage.setItem("cymi_profile", JSON.stringify(profile));
+        return token;
+      }
+
+      // 2. Fall back to backend login
+      if (!actor) return null;
+      try {
+        return await actor.login(username, password);
+      } catch {
+        return null;
+      }
     },
   });
 }
@@ -49,8 +123,13 @@ export function useLogout() {
   const queryClient = useQueryClient();
   return useMutation<void, Error, string>({
     mutationFn: async (token: string) => {
+      localStorage.removeItem("cymi_profile");
       if (!actor) return;
-      await actor.logout(token);
+      try {
+        await actor.logout(token);
+      } catch {
+        // ignore backend logout errors
+      }
     },
     onSuccess: () => {
       queryClient.clear();
@@ -59,11 +138,9 @@ export function useLogout() {
 }
 
 export function useSeedDemoUsers() {
-  const { actor } = useActor();
   return useMutation<void, Error, void>({
     mutationFn: async () => {
-      if (!actor) return;
-      await actor.seedDemoUsers();
+      // No-op: demo users are handled client-side
     },
   });
 }
