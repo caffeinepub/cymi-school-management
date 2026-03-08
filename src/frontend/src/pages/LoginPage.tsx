@@ -100,8 +100,9 @@ export default function LoginPage() {
           backgroundRepeat: "no-repeat",
         }}
       >
-        {/* Subtle overlay to improve card contrast */}
+        {/* Overlay layers */}
         <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
 
         {/* ── Page Content — card right-aligned ── */}
         <div className="relative z-10 min-h-full flex items-start justify-end px-4 py-10 sm:px-8 lg:pr-16">
@@ -111,20 +112,26 @@ export default function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
             >
-              <div className="bg-white rounded-lg login-card-shadow overflow-hidden">
+              <div className="bg-white rounded-2xl login-card-shadow overflow-hidden">
                 <div className="px-8 pt-8 pb-6">
-                  {/* ── School Logo ── */}
-                  <div className="flex justify-center mb-5">
+                  {/* ── School Logo + Welcome Greeting ── */}
+                  <div className="flex flex-col items-center mb-6">
                     <img
                       src="/assets/uploads/cymi-1.PNG"
                       alt="CYMI School Logo"
-                      className="w-20 h-20 object-contain"
+                      className="w-20 h-20 object-contain mb-3"
                     />
+                    <h1 className="text-xl font-bold text-gray-800 tracking-tight">
+                      Welcome Back!
+                    </h1>
+                    <p className="text-sm text-gray-400 mt-0.5">
+                      Sign in to CYMI School Management
+                    </p>
                   </div>
 
                   {/* ── Role Tabs ── */}
                   <div className="mb-5">
-                    <div className="grid grid-cols-4 rounded-md overflow-hidden border border-gray-200">
+                    <div className="grid grid-cols-4 rounded-xl overflow-hidden border border-gray-200">
                       {ROLE_TABS.map((tab) => {
                         const isActive = activeTab === tab.id;
                         return (
@@ -137,7 +144,7 @@ export default function LoginPage() {
                               setErrorMsg(null);
                             }}
                             className={[
-                              "py-2 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400/60",
+                              "py-2 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-400/60 rounded-xl",
                               isActive
                                 ? "btn-cymi text-white"
                                 : "bg-gray-50 text-gray-500 hover:bg-gray-100",
@@ -168,7 +175,7 @@ export default function LoginPage() {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         disabled={isLoading}
-                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition disabled:opacity-60 bg-white"
+                        className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition disabled:opacity-60 bg-white"
                       />
                     </div>
 
@@ -187,7 +194,7 @@ export default function LoginPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         disabled={isLoading}
-                        className="w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition disabled:opacity-60 bg-white"
+                        className="w-full pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400 transition disabled:opacity-60 bg-white"
                       />
                     </div>
 
@@ -215,13 +222,13 @@ export default function LoginPage() {
                       </div>
                     )}
 
-                    {/* Sign In button — right-aligned */}
-                    <div className="flex justify-end mt-2">
+                    {/* Sign In button — full width */}
+                    <div className="mt-2">
                       <button
                         data-ocid="login.submit_button"
                         type="submit"
                         disabled={isLoading}
-                        className="btn-cymi px-5 py-2 rounded text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-400/70 disabled:opacity-60 flex items-center gap-2"
+                        className="btn-cymi w-full py-2.5 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-400/70 disabled:opacity-60 flex items-center justify-center gap-2"
                       >
                         {isLoading && (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -249,6 +256,9 @@ export default function LoginPage() {
                     <span className="font-medium text-gray-600">
                       {activeHint}
                     </span>
+                    <p className="mt-2 text-gray-400 italic text-xs">
+                      Empowering education together
+                    </p>
                   </div>
                 </div>
               </div>

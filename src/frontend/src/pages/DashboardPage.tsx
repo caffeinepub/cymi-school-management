@@ -499,20 +499,87 @@ const GRADES_DATA = [
   { subject: "History", test: "Quiz", marks: "15/20", grade: "B+" },
 ];
 
-const SCHEDULE_DATA = [
-  { time: "8:00 AM", subject: "Mathematics", teacher: "Mr. Sharma" },
-  { time: "9:00 AM", subject: "Science", teacher: "Ms. Patel" },
-  { time: "10:00 AM", subject: "English", teacher: "Mrs. Kumar" },
-  { time: "11:00 AM", subject: "History", teacher: "Mr. Verma" },
-  { time: "12:00 PM", subject: "Physical Ed", teacher: "Mr. Singh" },
-];
+// Schedule varies by day of the week (0=Sun, 1=Mon, ..., 6=Sat)
+const WEEKLY_SCHEDULE: Record<
+  number,
+  { time: string; subject: string; teacher: string }[]
+> = {
+  0: [], // Sunday — no classes
+  1: [
+    { time: "8:00 AM", subject: "Mathematics", teacher: "Mr. Sharma" },
+    { time: "9:00 AM", subject: "Science", teacher: "Ms. Patel" },
+    { time: "10:00 AM", subject: "English", teacher: "Mrs. Kumar" },
+    { time: "11:00 AM", subject: "History", teacher: "Mr. Verma" },
+    { time: "12:00 PM", subject: "Physical Ed", teacher: "Mr. Singh" },
+  ],
+  2: [
+    { time: "8:00 AM", subject: "English", teacher: "Mrs. Kumar" },
+    { time: "9:00 AM", subject: "Mathematics", teacher: "Mr. Sharma" },
+    { time: "10:00 AM", subject: "Computer Science", teacher: "Ms. Nair" },
+    { time: "11:00 AM", subject: "Art", teacher: "Ms. Iyer" },
+    { time: "12:00 PM", subject: "Hindi", teacher: "Mr. Gupta" },
+  ],
+  3: [
+    { time: "8:00 AM", subject: "Science", teacher: "Ms. Patel" },
+    { time: "9:00 AM", subject: "Geography", teacher: "Mrs. Reddy" },
+    { time: "10:00 AM", subject: "Mathematics", teacher: "Mr. Sharma" },
+    { time: "11:00 AM", subject: "Physical Ed", teacher: "Mr. Singh" },
+    { time: "12:00 PM", subject: "English", teacher: "Mrs. Kumar" },
+  ],
+  4: [
+    { time: "8:00 AM", subject: "History", teacher: "Mr. Verma" },
+    { time: "9:00 AM", subject: "Hindi", teacher: "Mr. Gupta" },
+    { time: "10:00 AM", subject: "Science", teacher: "Ms. Patel" },
+    { time: "11:00 AM", subject: "Mathematics", teacher: "Mr. Sharma" },
+    { time: "12:00 PM", subject: "Computer Science", teacher: "Ms. Nair" },
+  ],
+  5: [
+    { time: "8:00 AM", subject: "Physical Ed", teacher: "Mr. Singh" },
+    { time: "9:00 AM", subject: "English", teacher: "Mrs. Kumar" },
+    { time: "10:00 AM", subject: "Art", teacher: "Ms. Iyer" },
+    { time: "11:00 AM", subject: "Geography", teacher: "Mrs. Reddy" },
+    { time: "12:00 PM", subject: "Mathematics", teacher: "Mr. Sharma" },
+  ],
+  6: [], // Saturday — no classes
+};
 
-// Days remaining from today (Mar 07 2026) hard-coded for demo
+function getTodaySchedule() {
+  const day = new Date().getDay();
+  return WEEKLY_SCHEDULE[day] ?? [];
+}
+
+function formatTodayDate() {
+  return new Date().toLocaleDateString("en-IN", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+function daysFromToday(dateStr: string): number {
+  const target = new Date(dateStr);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  target.setHours(0, 0, 0, 0);
+  return Math.ceil(
+    (target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24),
+  );
+}
+
 const EXAM_LIST = [
-  { subject: "Maths Final", date: "Mar 12, 2026", daysLeft: 5 },
-  { subject: "Science Final", date: "Mar 14, 2026", daysLeft: 7 },
-  { subject: "English Final", date: "Mar 16, 2026", daysLeft: 9 },
-];
+  { subject: "Maths Final", date: "2026-03-12" },
+  { subject: "Science Final", date: "2026-03-14" },
+  { subject: "English Final", date: "2026-03-16" },
+].map((e) => ({
+  ...e,
+  displayDate: new Date(e.date).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }),
+  daysLeft: daysFromToday(e.date),
+}));
 
 const FEE_HISTORY = [
   { term: "Term 1", period: "Jan 2026", amount: "₹14,500", status: "Paid" },
@@ -1462,10 +1529,18 @@ function ParentPanel() {
                   <div className="text-sm font-semibold text-gray-800">
                     {exam.subject}
                   </div>
-                  <div className="text-xs text-gray-400">{exam.date}</div>
+                  <div className="text-xs text-gray-400">
+                    {exam.displayDate}
+                  </div>
                 </div>
-                <span className="px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-full border border-amber-200">
-                  {exam.daysLeft}d left
+                <span
+                  className={`px-2.5 py-1 text-xs font-bold rounded-full border ${exam.daysLeft < 0 ? "bg-gray-50 text-gray-400 border-gray-200" : exam.daysLeft <= 3 ? "bg-red-50 text-red-700 border-red-200" : "bg-amber-50 text-amber-700 border-amber-200"}`}
+                >
+                  {exam.daysLeft < 0
+                    ? "Past"
+                    : exam.daysLeft === 0
+                      ? "Today!"
+                      : `${exam.daysLeft}d left`}
                 </span>
               </div>
             ))}
@@ -1644,32 +1719,43 @@ function StudentPanel() {
           transition={{ duration: 0.4, delay: 0.18 }}
           className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
         >
-          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">
-            Today's Schedule
-          </h2>
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="text-gray-400 text-left border-b border-gray-100">
-                <th className="pb-2 font-semibold">Time</th>
-                <th className="pb-2 font-semibold">Subject</th>
-                <th className="pb-2 font-semibold">Teacher</th>
-              </tr>
-            </thead>
-            <tbody>
-              {SCHEDULE_DATA.map((row) => (
-                <tr
-                  key={row.time}
-                  className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"
-                >
-                  <td className="py-2 font-mono text-gray-500">{row.time}</td>
-                  <td className="py-2 font-semibold text-gray-800">
-                    {row.subject}
-                  </td>
-                  <td className="py-2 text-gray-500">{row.teacher}</td>
+          <div className="mb-4">
+            <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+              Today's Schedule
+            </h2>
+            <p className="text-xs text-gray-400 mt-0.5">{formatTodayDate()}</p>
+          </div>
+          {getTodaySchedule().length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+              <CalendarCheck className="w-8 h-8 mb-2 opacity-40" />
+              <p className="text-sm font-medium">No classes today</p>
+              <p className="text-xs mt-1">Enjoy your day off!</p>
+            </div>
+          ) : (
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-gray-400 text-left border-b border-gray-100">
+                  <th className="pb-2 font-semibold">Time</th>
+                  <th className="pb-2 font-semibold">Subject</th>
+                  <th className="pb-2 font-semibold">Teacher</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {getTodaySchedule().map((row) => (
+                  <tr
+                    key={row.time}
+                    className="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"
+                  >
+                    <td className="py-2 font-mono text-gray-500">{row.time}</td>
+                    <td className="py-2 font-semibold text-gray-800">
+                      {row.subject}
+                    </td>
+                    <td className="py-2 text-gray-500">{row.teacher}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </motion.div>
 
         {/* Recent Grades */}

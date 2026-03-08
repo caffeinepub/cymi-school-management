@@ -18,9 +18,14 @@ import {
   GraduationCap,
   LayoutDashboard,
   LogOut,
+  Mail,
   Menu,
   MessageSquare,
   Settings,
+  Shield,
+  UserCheck,
+  UserCircle,
+  UserPlus,
   Users,
   X,
 } from "lucide-react";
@@ -64,6 +69,34 @@ function getMenuItems(role: string): NavItem[] {
         ocid: "sidebar.dashboard_link",
       },
       {
+        label: "SMS",
+        icon: <MessageSquare className="w-5 h-5" />,
+        href: "/dashboard",
+        ocid: "sidebar.sms_link",
+      },
+      {
+        label: "Email",
+        icon: <Mail className="w-5 h-5" />,
+        href: "/dashboard",
+        ocid: "sidebar.email_link",
+      },
+      {
+        label: "Profile",
+        icon: <UserCircle className="w-5 h-5" />,
+        href: "/dashboard",
+        ocid: "sidebar.profile_link",
+      },
+      {
+        label: "Admissions",
+        icon: <UserPlus className="w-5 h-5" />,
+        groupOcid: "sidebar.admissions_group_toggle",
+        children: [
+          { label: "All Admissions", href: "/dashboard" },
+          { label: "New Admission", href: "/students?action=add" },
+          { label: "Admission Reports", href: "/dashboard" },
+        ],
+      },
+      {
         label: "Students",
         icon: <GraduationCap className="w-5 h-5" />,
         groupOcid: "sidebar.students_group_toggle",
@@ -74,36 +107,63 @@ function getMenuItems(role: string): NavItem[] {
         ],
       },
       {
-        label: "Teachers",
-        icon: <Users className="w-5 h-5" />,
-        groupOcid: "sidebar.teachers_group_toggle",
-        children: [
-          { label: "All Teachers" },
-          { label: "Add Teacher" },
-          { label: "Assignments" },
-        ],
-      },
-      {
         label: "Academics",
         icon: <BookOpen className="w-5 h-5" />,
         groupOcid: "sidebar.academics_group_toggle",
         children: [
-          { label: "Timetable" },
-          { label: "Exams" },
-          { label: "Results" },
+          { label: "Timetable", href: "/dashboard" },
+          { label: "Exams", href: "/dashboard" },
+          { label: "Results", href: "/dashboard" },
         ],
       },
       {
-        label: "Finance",
+        label: "Attendance",
+        icon: <CalendarCheck className="w-5 h-5" />,
+        href: "/attendance",
+        ocid: "sidebar.attendance_link",
+      },
+      {
+        label: "Exam Management",
+        icon: <BookOpenCheck className="w-5 h-5" />,
+        groupOcid: "sidebar.exam_group_toggle",
+        children: [
+          { label: "Exam Schedule", href: "/dashboard" },
+          { label: "Hall Tickets", href: "/dashboard" },
+          { label: "Results", href: "/dashboard" },
+        ],
+      },
+      {
+        label: "Fee Management",
         icon: <CreditCard className="w-5 h-5" />,
         groupOcid: "sidebar.finance_group_toggle",
         children: [
+          { label: "Fee Settings", href: "/dashboard" },
           { label: "Fee Structure", href: "/fees/structure" },
+          { label: "Fee Concession", href: "/dashboard" },
           { label: "Fee Collection", href: "/fees/collection" },
           { label: "Fee Register", href: "/fees/register" },
-          { label: "Receipts", href: "/fees/receipts" },
-          { label: "Fee History", href: "/fees/history" },
-          { label: "Fee Reports", href: "/fees/reports" },
+          { label: "Fee Defaulters", href: "/dashboard" },
+          { label: "Fee Receipt History", href: "/fees/history" },
+        ],
+      },
+      {
+        label: "Staff",
+        icon: <Users className="w-5 h-5" />,
+        groupOcid: "sidebar.staff_group_toggle",
+        children: [
+          { label: "All Staff", href: "/dashboard" },
+          { label: "Add Staff", href: "/dashboard" },
+          { label: "Staff Attendance", href: "/dashboard" },
+        ],
+      },
+      {
+        label: "Teachers",
+        icon: <UserCheck className="w-5 h-5" />,
+        groupOcid: "sidebar.teachers_group_toggle",
+        children: [
+          { label: "All Teachers", href: "/dashboard" },
+          { label: "Add Teacher", href: "/dashboard" },
+          { label: "Assignments", href: "/dashboard" },
         ],
       },
       {
@@ -120,7 +180,7 @@ function getMenuItems(role: string): NavItem[] {
       },
       {
         label: "User Management",
-        icon: <Users className="w-5 h-5" />,
+        icon: <Shield className="w-5 h-5" />,
         href: "/user-management",
         ocid: "sidebar.user_management_link",
       },
@@ -335,7 +395,7 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                         type="button"
                         data-ocid={item.groupOcid}
                         onClick={() => toggleGroup(item.label)}
-                        className={`sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left ${groupActive ? "bg-white/10 border-l-2 border-white/50" : ""}`}
+                        className={`sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left ${groupActive ? "bg-white/15 border-l-2 border-white/80" : ""}`}
                         aria-expanded={isOpen}
                       >
                         <span
@@ -430,7 +490,7 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                   key={item.label}
                   to={item.href ?? "/dashboard"}
                   data-ocid={item.ocid}
-                  className={`sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-md ${leafActive ? "bg-white/15 text-white font-semibold" : ""}`}
+                  className={`sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-md ${leafActive ? "bg-white/15 border-l-2 border-white/80 text-white font-semibold" : ""}`}
                 >
                   <span
                     className={`flex-shrink-0 ${leafActive ? "text-white" : "text-white/70"}`}
@@ -480,6 +540,9 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                 {initials || "U"}
               </div>
               <div className="flex-1 min-w-0">
+                <div className="text-white/60 text-xs mb-0.5">
+                  Hi, {userName.split(" ")[0]}!
+                </div>
                 <div className="text-white text-xs font-semibold truncate">
                   {userName}
                 </div>
