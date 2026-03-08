@@ -23,6 +23,8 @@ import FeeReceiptsPage from "./pages/fees/FeeReceiptsPage";
 import FeeRegisterPage from "./pages/fees/FeeRegisterPage";
 import FeeReportsPage from "./pages/fees/FeeReportsPage";
 import FeeStructurePage from "./pages/fees/FeeStructurePage";
+import TeacherProfilePage from "./pages/staff/TeacherProfilePage";
+import TeachersPage from "./pages/staff/TeachersPage";
 import TransportAssignmentsPage from "./pages/transport/TransportAssignmentsPage";
 import TransportDriversPage from "./pages/transport/TransportDriversPage";
 import TransportReportsPage from "./pages/transport/TransportReportsPage";
@@ -171,6 +173,18 @@ const superAdminControlRoute = createRoute({
   component: SuperAdminControlPage,
 });
 
+const teachersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/teachers",
+  component: TeachersPage,
+});
+
+const teacherProfileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/teachers/$id",
+  component: TeacherProfilePage,
+});
+
 const catchAllRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "*",
@@ -200,6 +214,8 @@ const routeTree = rootRoute.addChildren([
   feeHistoryRoute,
   feeReportsRoute,
   superAdminControlRoute,
+  teachersRoute,
+  teacherProfileRoute,
   catchAllRoute,
 ]);
 

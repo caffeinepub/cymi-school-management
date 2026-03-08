@@ -154,9 +154,9 @@ function getMenuItems(role: string): NavItem[] {
           { label: "All Staff", href: "/dashboard" },
           { label: "Add Staff", href: "/dashboard" },
           { label: "Staff Attendance", href: "/dashboard" },
-          { label: "All Teachers", href: "/dashboard" },
-          { label: "Add Teacher", href: "/dashboard" },
-          { label: "Teacher Assignments", href: "/dashboard" },
+          { label: "All Teachers", href: "/teachers" },
+          { label: "Add Teacher", href: "/teachers?action=add" },
+          { label: "Teacher Assignments", href: "/teachers?tab=assignments" },
         ],
       },
       {
