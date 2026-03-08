@@ -14,6 +14,7 @@ import LoginPage from "./pages/LoginPage";
 import ReportsPage from "./pages/ReportsPage";
 import StudentProfilePage from "./pages/StudentProfilePage";
 import StudentsPage from "./pages/StudentsPage";
+import SuperAdminControlPage from "./pages/SuperAdminControlPage";
 import SystemSettingsPage from "./pages/SystemSettingsPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import FeeCollectionPage from "./pages/fees/FeeCollectionPage";
@@ -164,6 +165,12 @@ const feeReportsRoute = createRoute({
   component: FeeReportsPage,
 });
 
+const superAdminControlRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/superadmin",
+  component: SuperAdminControlPage,
+});
+
 const catchAllRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "*",
@@ -192,6 +199,7 @@ const routeTree = rootRoute.addChildren([
   feeReceiptsRoute,
   feeHistoryRoute,
   feeReportsRoute,
+  superAdminControlRoute,
   catchAllRoute,
 ]);
 

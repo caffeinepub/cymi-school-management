@@ -23,6 +23,7 @@ import {
   MessageSquare,
   Settings,
   Shield,
+  Sliders,
   UserCircle,
   UserPlus,
   Users,
@@ -189,6 +190,12 @@ function getMenuItems(role: string): NavItem[] {
               icon: <Settings className="w-5 h-5" />,
               href: "/system-settings",
               ocid: "sidebar.system_settings_link",
+            } as NavItem,
+            {
+              label: "Control Center",
+              icon: <Sliders className="w-5 h-5" />,
+              href: "/superadmin",
+              ocid: "sidebar.control_center_link",
             } as NavItem,
           ]
         : [

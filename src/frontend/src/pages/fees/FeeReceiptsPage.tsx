@@ -6,7 +6,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -19,7 +18,6 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   ChevronLeft,
   ChevronRight,
-  Download,
   FileText,
   Loader2,
   Printer,
@@ -44,55 +42,88 @@ function ReceiptDetailModal({
   receipt,
   onClose,
 }: { receipt: ReceiptType; onClose: () => void }) {
-  function handlePrint() {
-    const win = window.open("", "_blank_rcp");
-    if (!win) return;
+  const [schoolCopy, setSchoolCopy] = useState(true);
+  const [parentCopy, setParentCopy] = useState(true);
+
+  // Derive a plausible father's name from student name (demo data)
+  const fatherName = receipt.studentName
+    .split(" ")
+    .slice(1)
+    .map((n) => `${n[0].toUpperCase()}${n.slice(1)}`)
+    .join(" ");
+  const fatherDisplay = fatherName
+    ? `${fatherName.split(" ")[0]} Prasad ${fatherName}`
+    : "Father Name";
+
+  function buildPrintHtml(copies: string[]) {
     const rows = receipt.feeHeads
       .map(
-        (f) =>
-          `<tr><td style="padding:8px;border-bottom:1px solid #e5e7eb;">${f.name}</td>
-       <td style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb;">₹${f.amount.toLocaleString("en-IN")}</td>
-       <td style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb;">${f.discount > 0 ? `₹${f.discount.toLocaleString("en-IN")}` : "—"}</td>
-       <td style="padding:8px;text-align:right;border-bottom:1px solid #e5e7eb;font-weight:600;">₹${(f.amount - f.discount).toLocaleString("en-IN")}</td></tr>`,
+        (f, i) =>
+          `<tr>
+            <td style="padding:7px 10px;border:1px solid #ccc;">${i + 1}</td>
+            <td style="padding:7px 10px;border:1px solid #ccc;">${f.name}</td>
+            <td style="padding:7px 10px;border:1px solid #ccc;text-align:right;">${(f.amount - f.discount).toLocaleString("en-IN")}</td>
+          </tr>`,
       )
       .join("");
-    win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>${receipt.receiptNo}</title>
-    <style>
-    *{box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:32px;max-width:680px;margin:0 auto;color:#1f2937;}
-    .header{display:flex;align-items:center;gap:16px;border-bottom:3px solid #1e40af;padding-bottom:16px;margin-bottom:20px;}
-    .school-name{font-size:20px;font-weight:800;color:#1e40af;}
-    .receipt-title{font-size:13px;color:#6b7280;margin:2px 0;}
-    .receipt-num{font-family:monospace;font-weight:700;font-size:15px;color:#1e40af;}
-    .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;margin-bottom:20px;}
-    .info-label{color:#6b7280;} .info-val{font-weight:600;}
-    table{width:100%;border-collapse:collapse;}
-    th{background:#1e40af;color:#fff;padding:10px 8px;text-align:left;font-size:12px;}
-    td{font-size:13px;}
-    .total-row{background:#eff6ff;font-weight:700;font-size:15px;}
-    .footer{margin-top:24px;font-size:11px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:12px;text-align:center;}
-    @media print{@page{margin:14mm;}}
-    </style></head><body>
-    <div class="header">
-    <img src="/assets/uploads/cymi-1.PNG" width="60" height="60" style="object-fit:contain;"/>
-    <div><div class="school-name">CYMI Computer Institute</div><div class="receipt-title">Official Fee Receipt</div></div>
-    <div style="margin-left:auto;text-align:right;">
-    <div class="receipt-num">${receipt.receiptNo}</div>
-    <div style="font-size:12px;color:#6b7280;margin-top:4px;">${receipt.date}</div>
-    </div></div>
-    <div class="info-grid">
-    <div><span class="info-label">Student Name: </span><span class="info-val">${receipt.studentName}</span></div>
-    <div><span class="info-label">Admission No: </span><span class="info-val">${receipt.admissionNo}</span></div>
-    <div><span class="info-label">Class: </span><span class="info-val">${receipt.grade}-${receipt.section}</span></div>
-    <div><span class="info-label">Payment Method: </span><span class="info-val">${receipt.paymentMethod}</span></div>
-    </div>
-    <table><thead><tr><th>Fee Head</th><th style="text-align:right">Amount</th><th style="text-align:right">Discount</th><th style="text-align:right">Net Amount</th></tr></thead>
-    <tbody>${rows}</tbody>
-    <tfoot><tr class="total-row"><td colspan="3" style="padding:10px 8px;">Total Amount Paid</td>
-    <td style="padding:10px 8px;text-align:right;">₹${receipt.totalAmount.toLocaleString("en-IN")}</td></tr></tfoot></table>
-    ${receipt.remarks ? `<p style="margin-top:12px;font-size:12px;color:#374151;"><b>Remarks:</b> ${receipt.remarks}</p>` : ""}
-    <div class="footer">This is a computer generated receipt. No signature required. | CYMI Computer Institute</div>
-    <script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script>
-    </body></html>`);
+
+    const receiptBlock = (copyLabel: string) => `
+      <div style="page-break-inside:avoid;margin-bottom:40px;">
+        <div style="text-align:center;margin-bottom:16px;">
+          <div style="font-size:22px;font-weight:800;">CYMI Computer Institute</div>
+          <div style="font-size:14px;font-weight:600;margin-top:4px;">Fee Receipt</div>
+        </div>
+        <table style="width:100%;font-size:13px;margin-bottom:16px;border-collapse:collapse;">
+          <tr>
+            <td style="width:50%;padding:4px 0;"><b>Admission Number :</b> ${receipt.admissionNo}</td>
+            <td style="width:50%;padding:4px 0;text-align:right;"><b>Date :</b> ${receipt.date}</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0;"><b>Name :</b> ${receipt.studentName}</td>
+            <td style="padding:4px 0;text-align:right;"><b>Receipt No :</b> ${receipt.receiptNo}</td>
+          </tr>
+          <tr>
+            <td style="padding:4px 0;"><b>Father's Name :</b> ${fatherDisplay}</td>
+            <td style="padding:4px 0;text-align:right;"><b>Class :</b> ${receipt.grade}-${receipt.section}</td>
+          </tr>
+        </table>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:20px;">
+          <thead>
+            <tr style="background:#f3f4f6;">
+              <th style="padding:8px 10px;border:1px solid #ccc;text-align:left;width:15%;">Sl. No.</th>
+              <th style="padding:8px 10px;border:1px solid #ccc;text-align:left;">Particular</th>
+              <th style="padding:8px 10px;border:1px solid #ccc;text-align:right;width:20%;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+          <tfoot>
+            <tr>
+              <td colspan="2" style="padding:8px 10px;border:1px solid #ccc;text-align:right;font-weight:700;">Total</td>
+              <td style="padding:8px 10px;border:1px solid #ccc;text-align:right;font-weight:700;">${receipt.totalAmount.toLocaleString("en-IN")}</td>
+            </tr>
+          </tfoot>
+        </table>
+        <div style="text-align:right;font-size:13px;margin-bottom:28px;">Principal / Accountant</div>
+        <div style="font-size:11px;color:#666;text-align:center;">${copyLabel}</div>
+      </div>`;
+
+    const copyBlocks = copies
+      .map((c) => receiptBlock(c))
+      .join('<hr style="border:1px dashed #aaa;margin:20px 0;"/>');
+
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Fee Receipt - ${receipt.receiptNo}</title>
+      <style>*{box-sizing:border-box;}body{font-family:Arial,sans-serif;padding:28px;max-width:700px;margin:0 auto;color:#111;}@media print{@page{margin:12mm;}}</style>
+      </head><body>${copyBlocks}<script>window.onload=function(){window.print();window.onafterprint=function(){window.close();};};<\/script></body></html>`;
+  }
+
+  function handlePrint() {
+    const copies: string[] = [];
+    if (schoolCopy) copies.push("School Copy");
+    if (parentCopy) copies.push("Parent Copy");
+    if (copies.length === 0) copies.push("Copy");
+    const win = window.open("", "_blank_rcp");
+    if (!win) return;
+    win.document.write(buildPrintHtml(copies));
     win.document.close();
   }
 
@@ -100,114 +131,151 @@ function ReceiptDetailModal({
     <Dialog open onOpenChange={onClose}>
       <DialogContent
         data-ocid="fee-receipts.dialog"
-        className="max-w-lg max-h-[90vh] overflow-y-auto"
+        className="max-w-xl max-h-[92vh] overflow-y-auto p-0"
       >
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Receipt className="w-5 h-5 text-blue-600" /> Receipt Details
+        {/* Modal title bar */}
+        <div className="bg-[#4a90c4] text-white px-6 py-3 rounded-t-lg flex items-center justify-between">
+          <DialogTitle className="text-base font-semibold text-white m-0">
+            Fee Receipt
           </DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          {/* Header */}
-          <div className="flex items-center gap-3 bg-blue-50 rounded-xl p-4">
-            <img
-              src="/assets/uploads/cymi-1.PNG"
-              alt="CYMI"
-              className="w-10 h-10 object-contain flex-shrink-0"
-            />
-            <div className="flex-1">
-              <p className="font-bold text-blue-900">CYMI Computer Institute</p>
-              <p className="text-xs text-blue-700">Official Fee Receipt</p>
-            </div>
-            <div className="text-right">
-              <p className="font-mono text-sm font-bold text-blue-900">
-                {receipt.receiptNo}
-              </p>
-              <p className="text-xs text-blue-700">{receipt.date}</p>
-            </div>
+          <button
+            type="button"
+            onClick={onClose}
+            data-ocid="fee-receipts.close_button"
+            className="text-white/80 hover:text-white transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Receipt body */}
+        <div className="bg-white p-6 space-y-4">
+          {/* School heading */}
+          <div className="text-center border border-gray-200 rounded p-4 bg-white">
+            <h2 className="text-xl font-bold text-gray-900">
+              CYMI Computer Institute
+            </h2>
+            <p className="text-sm font-semibold text-gray-700 mt-1">
+              Fee Receipt
+            </p>
           </div>
 
-          {/* Student Info */}
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <span className="text-gray-500">Student:</span>{" "}
-              <span className="font-medium">{receipt.studentName}</span>
-            </div>
-            <div>
-              <span className="text-gray-500">Adm No:</span>{" "}
-              <span className="font-medium font-mono text-xs">
-                {receipt.admissionNo}
+          {/* Student info two-column grid */}
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm border border-gray-200 rounded p-4">
+            <div className="flex gap-1">
+              <span className="font-semibold whitespace-nowrap">
+                Admission Number :
               </span>
+              <span className="text-gray-700">{receipt.admissionNo}</span>
             </div>
-            <div>
-              <span className="text-gray-500">Class:</span>{" "}
-              <span className="font-medium">
+            <div className="flex gap-1 justify-end">
+              <span className="font-semibold">Date :</span>
+              <span className="text-gray-700">{receipt.date}</span>
+            </div>
+            <div className="flex gap-1">
+              <span className="font-semibold">Name :</span>
+              <span className="text-gray-700">{receipt.studentName}</span>
+            </div>
+            <div className="flex gap-1 justify-end">
+              <span className="font-semibold">Receipt No :</span>
+              <span className="text-gray-700">{receipt.receiptNo}</span>
+            </div>
+            <div className="flex gap-1">
+              <span className="font-semibold whitespace-nowrap">
+                Father's Name :
+              </span>
+              <span className="text-gray-700">{fatherDisplay}</span>
+            </div>
+            <div className="flex gap-1 justify-end">
+              <span className="font-semibold">Class :</span>
+              <span className="text-gray-700">
                 {receipt.grade}-{receipt.section}
               </span>
             </div>
-            <div>
-              <span className="text-gray-500">Method:</span>{" "}
-              <span className="font-medium">{receipt.paymentMethod}</span>
-            </div>
           </div>
 
-          <Separator />
+          {/* Fee table */}
+          <table className="w-full text-sm border-collapse border border-gray-300">
+            <thead>
+              <tr className="bg-gray-50">
+                <th className="border border-gray-300 px-3 py-2 text-left w-16">
+                  Sl. No.
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-left">
+                  Particular
+                </th>
+                <th className="border border-gray-300 px-3 py-2 text-right w-28">
+                  Amount
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {receipt.feeHeads.map((f, i) => (
+                <tr key={f.name}>
+                  <td className="border border-gray-300 px-3 py-2">{i + 1}</td>
+                  <td className="border border-gray-300 px-3 py-2">{f.name}</td>
+                  <td className="border border-gray-300 px-3 py-2 text-right">
+                    {(f.amount - f.discount).toLocaleString("en-IN")}
+                  </td>
+                </tr>
+              ))}
+              <tr>
+                <td
+                  colSpan={2}
+                  className="border border-gray-300 px-3 py-2 text-right font-semibold"
+                >
+                  Total
+                </td>
+                <td className="border border-gray-300 px-3 py-2 text-right font-semibold">
+                  {receipt.totalAmount.toLocaleString("en-IN")}
+                </td>
+              </tr>
+            </tbody>
+          </table>
 
-          {/* Fee Lines */}
-          <div className="space-y-2">
-            <div className="grid grid-cols-4 gap-2 text-xs font-semibold text-gray-500 uppercase px-1">
-              <span className="col-span-2">Fee Head</span>
-              <span className="text-right">Amount</span>
-              <span className="text-right">Discount</span>
-            </div>
-            {receipt.feeHeads.map((f) => (
-              <div key={f.name} className="grid grid-cols-4 gap-2 text-sm px-1">
-                <span className="col-span-2 text-gray-700">{f.name}</span>
-                <span className="text-right font-medium">{fmt(f.amount)}</span>
-                <span className="text-right text-green-600">
-                  {f.discount > 0 ? fmt(f.discount) : "—"}
-                </span>
-              </div>
-            ))}
-            <Separator />
-            <div className="flex justify-between font-bold text-base px-1">
-              <span>Total Paid</span>
-              <span className="text-blue-700">{fmt(receipt.totalAmount)}</span>
-            </div>
+          {/* Signature */}
+          <div className="text-right text-sm text-gray-700 pr-1">
+            Principal / Accountant
           </div>
+        </div>
 
-          {receipt.remarks && (
-            <p className="text-xs text-gray-500 italic bg-gray-50 rounded p-2">
-              Remarks: {receipt.remarks}
-            </p>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-2 pt-2">
-            <Button
-              data-ocid="fee-receipts.primary_button"
-              onClick={handlePrint}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white gap-2"
-            >
-              <Printer className="w-4 h-4" /> Print Receipt
-            </Button>
-            <Button
-              data-ocid="fee-receipts.secondary_button"
-              variant="outline"
-              onClick={handlePrint}
-              className="flex-1 gap-2"
-            >
-              <Download className="w-4 h-4" /> Download PDF
-            </Button>
-          </div>
+        {/* Footer actions */}
+        <div className="bg-gray-50 border-t border-gray-200 px-6 py-3 flex items-center gap-3 rounded-b-lg">
           <Button
             data-ocid="fee-receipts.close_button"
-            variant="ghost"
+            variant="outline"
             onClick={onClose}
-            className="w-full text-gray-500"
+            className="px-6"
           >
             Close
           </Button>
+          <Button
+            data-ocid="fee-receipts.primary_button"
+            onClick={handlePrint}
+            className="px-6 bg-[#4a90c4] hover:bg-[#3a7ab0] text-white gap-2"
+          >
+            <Printer className="w-4 h-4" /> Print
+          </Button>
+          <div className="ml-auto flex flex-col gap-1 text-sm">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={schoolCopy}
+                onChange={(e) => setSchoolCopy(e.target.checked)}
+                className="w-4 h-4 accent-[#4a90c4]"
+              />
+              <span>School Copy</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={parentCopy}
+                onChange={(e) => setParentCopy(e.target.checked)}
+                className="w-4 h-4 accent-[#4a90c4]"
+              />
+              <span>Parent Copy</span>
+            </label>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

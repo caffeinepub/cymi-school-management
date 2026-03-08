@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "@tanstack/react-router";
-import { Bell, Loader2, Settings } from "lucide-react";
+import { ArrowRight, Bell, Loader2, Settings, Sliders } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -167,6 +167,45 @@ export default function SystemSettingsPage() {
                 policies
               </p>
             </motion.div>
+
+            {/* ── Super Admin Control Center Banner ── */}
+            {role === "SuperAdmin" && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.02 }}
+                className="mb-5 rounded-xl overflow-hidden"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #1e40af 0%, #2563eb 50%, #3b82f6 100%)",
+                }}
+              >
+                <div className="p-6 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                      <Sliders className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-white font-bold text-base">
+                        Super Admin Control Center
+                      </h2>
+                      <p className="text-blue-100 text-sm mt-0.5">
+                        Access the full control panel to customize modules,
+                        permissions, branding, and more.
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    data-ocid="settings.go_to_control_center.button"
+                    onClick={() => navigate({ to: "/superadmin" })}
+                    className="bg-white text-blue-700 hover:bg-blue-50 flex-shrink-0 font-semibold gap-2"
+                  >
+                    Go to Control Center
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </motion.div>
+            )}
 
             {/* ── School Information ── */}
             <motion.div
