@@ -17,43 +17,13 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "@tanstack/react-router";
-import {
-  AlertCircle,
-  CheckCircle2,
-  CreditCard,
-  Loader2,
-  Printer,
-  TrendingUp,
-  Users,
-} from "lucide-react";
+import { CheckCircle2, CreditCard, Loader2, Printer } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import Sidebar from "../../components/Sidebar";
 import { FEE_STRUCTURES, FEE_STUDENTS } from "../../data/fees";
 import { useCallerUserProfile, useLogout } from "../../hooks/useQueries";
-
-// ─── AnimatedCounter ──────────────────────────────────────────────────────────
-function AnimatedCounter({ target }: { target: number }) {
-  const [display, setDisplay] = useState(0);
-  const rafRef = useRef<number | null>(null);
-  useEffect(() => {
-    const start = performance.now();
-    const duration = 1000;
-    const tick = (now: number) => {
-      const elapsed = now - start;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - (1 - progress) ** 3;
-      setDisplay(Math.round(eased * target));
-      if (progress < 1) rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    };
-  }, [target]);
-  return <>{display}</>;
-}
 
 function fmt(n: number) {
   return `₹${n.toLocaleString("en-IN")}`;
@@ -120,16 +90,6 @@ const CLASS_OPTIONS = [
   "Grade 10",
   "Grade 11",
   "Grade 12",
-];
-
-const CONCESSION_CATEGORIES = [
-  "None",
-  "Staff Ward",
-  "Sibling Discount",
-  "Merit Scholarship",
-  "Sports Quota",
-  "Management Quota",
-  "Below Poverty Line",
 ];
 
 interface FeeTableRow {
@@ -507,297 +467,88 @@ export default function FeeCollectionPage() {
     : "User";
   const role = profile?.schoolRole ?? "Admin";
 
+  const selectedStructureLabel =
+    FEE_STRUCTURE_OPTIONS.find((s) => s.id === Number(selectedStructure))
+      ?.label ?? "";
+
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-[#f4f6f8] overflow-hidden">
       <Sidebar
         role={String(role)}
         userName={userName}
         onLogout={handleLogout}
       />
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="bg-white border-b border-gray-100 px-6 py-4 flex-shrink-0"
-        >
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-blue-600" /> Fee Collection
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Collect fees and generate receipts
-          </p>
-        </motion.div>
-
-        <div className="flex-1 overflow-auto px-6 py-4 space-y-4">
-          {/* Stats row */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            {[
-              {
-                label: "Today's Collection",
-                numTarget: 45200,
-                prefix: "₹",
-                icon: <CreditCard className="w-5 h-5" />,
-                color: "text-blue-600",
-                bg: "bg-blue-50",
-                border: "border-blue-100",
-              },
-              {
-                label: "This Month",
-                numTarget: 342000,
-                prefix: "₹",
-                icon: <TrendingUp className="w-5 h-5" />,
-                color: "text-green-600",
-                bg: "bg-green-50",
-                border: "border-green-100",
-              },
-              {
-                label: "Pending Students",
-                numTarget: 87,
-                prefix: "",
-                icon: <Users className="w-5 h-5" />,
-                color: "text-amber-600",
-                bg: "bg-amber-50",
-                border: "border-amber-100",
-              },
-              {
-                label: "Overdue",
-                numTarget: 23,
-                prefix: "",
-                icon: <AlertCircle className="w-5 h-5" />,
-                color: "text-red-600",
-                bg: "bg-red-50",
-                border: "border-red-100",
-              },
-            ].map((s, i) => (
-              <motion.div
-                key={s.label}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 + 0.05 }}
-                className={`bg-white rounded-xl border ${s.border} p-4 flex items-center gap-4 shadow-sm`}
-              >
-                <div
-                  className={`w-11 h-11 rounded-xl ${s.bg} flex items-center justify-center`}
-                >
-                  <span className={s.color}>{s.icon}</span>
-                </div>
-                <div>
-                  <p className={`text-xl font-bold ${s.color}`}>
-                    {s.prefix}
-                    <AnimatedCounter target={s.numTarget} />
-                  </p>
-                  <p className="text-xs text-gray-500">{s.label}</p>
-                </div>
-              </motion.div>
-            ))}
+        {/* Page header — matches reference title style */}
+        <div className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <h1 className="text-base font-semibold text-gray-800">
+              Collect Fee
+              {selectedStructureLabel ? ` – ${selectedStructureLabel}` : ""}
+            </h1>
           </div>
+          <p className="text-xs text-gray-400 mt-0.5 ml-6">
+            Fill in the details below to collect fees and generate a receipt
+          </p>
+        </div>
 
-          {/* Monthly target progress */}
+        {/* Scrollable body */}
+        <div className="flex-1 overflow-auto p-6">
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.25 }}
-            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4"
+            transition={{ duration: 0.25 }}
+            className="bg-white border border-gray-200 rounded-md shadow-sm max-w-4xl"
           >
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <span className="text-xs font-semibold text-gray-700">
-                  Monthly Collection Target
-                </span>
-                <span className="text-xs text-gray-400 ml-2">
-                  Target: ₹5,00,000 | Collected: ₹3,42,000
-                </span>
-              </div>
-              <span className="text-sm font-bold text-emerald-700">68.4%</span>
-            </div>
-            <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-              <motion.div
-                className="bg-emerald-500 h-3 rounded-full"
-                initial={{ width: "0%" }}
-                animate={{ width: "68.4%" }}
-                transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
-              />
-            </div>
-            <div className="flex justify-between mt-1">
-              <span className="text-xs text-gray-400">₹0</span>
-              <span className="text-xs text-gray-500 font-medium">
-                ₹3,42,000 collected of ₹5,00,000 target
-              </span>
-              <span className="text-xs text-gray-400">₹5L</span>
-            </div>
-          </motion.div>
-
-          {/* ── Collect Fee Form ── */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="bg-white rounded-xl border border-gray-200 shadow-sm"
-          >
-            {/* Form title */}
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-base font-bold text-gray-800">
-                Collect Fee –{" "}
-                {FEE_STRUCTURE_OPTIONS.find(
-                  (s) => s.id === Number(selectedStructure),
-                )?.label ?? ""}
-              </h2>
-            </div>
-
-            <div className="px-6 py-5 space-y-5">
-              {/* Row 1: Fee Structure + Class */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="fee-structure"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Fee Structure
-                  </Label>
-                  <Select
-                    value={selectedStructure}
-                    onValueChange={setSelectedStructure}
-                  >
-                    <SelectTrigger
-                      id="fee-structure"
-                      data-ocid="fee-collection.fee_structure.select"
-                      className="bg-white border-gray-300"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {FEE_STRUCTURE_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.id} value={String(opt.id)}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="class-select"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Class
-                  </Label>
-                  <Select
-                    value={selectedClass}
-                    onValueChange={setSelectedClass}
-                  >
-                    <SelectTrigger
-                      id="class-select"
-                      data-ocid="fee-collection.class.select"
-                      className="bg-white border-gray-300"
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CLASS_OPTIONS.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Row 2: Admission No + Student Name */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="admission-no"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Admission No.
-                  </Label>
-                  <Select
-                    value={selectedAdmissionNo}
-                    onValueChange={handleAdmissionNoChange}
-                  >
-                    <SelectTrigger
-                      id="admission-no"
-                      data-ocid="fee-collection.admission_no.select"
-                      className="bg-white border-gray-300"
-                    >
-                      <SelectValue placeholder="-- Select --" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {studentsForClass.length === 0 ? (
-                        <SelectItem value="none" disabled>
-                          No students in this class
-                        </SelectItem>
-                      ) : (
-                        studentsForClass.map((s) => (
-                          <SelectItem key={s.admissionNo} value={s.admissionNo}>
-                            {s.admissionNo}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label
-                    htmlFor="student-name"
-                    className="text-sm font-medium text-gray-700"
-                  >
-                    Student Name
-                  </Label>
-                  <Select
-                    value={selectedStudentName}
-                    onValueChange={handleStudentNameChange}
-                  >
-                    <SelectTrigger
-                      id="student-name"
-                      data-ocid="fee-collection.student_name.select"
-                      className="bg-white border-gray-300"
-                    >
-                      <SelectValue placeholder="-- Select --" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {studentsForClass.length === 0 ? (
-                        <SelectItem value="none" disabled>
-                          No students in this class
-                        </SelectItem>
-                      ) : (
-                        studentsForClass.map((s) => (
-                          <SelectItem key={s.id} value={s.name}>
-                            {s.name}
-                          </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Row 3: Concession Category */}
+            <div className="p-6 space-y-5">
+              {/* ── Row 1: Fee Structure ── */}
               <div className="space-y-1.5">
                 <Label
-                  htmlFor="concession-cat"
+                  htmlFor="fee-structure"
                   className="text-sm font-medium text-gray-700"
                 >
-                  Concession Category
+                  Fee Structure
                 </Label>
                 <Select
-                  value={concessionCategory}
-                  onValueChange={setConcessionCategory}
+                  value={selectedStructure}
+                  onValueChange={setSelectedStructure}
                 >
                   <SelectTrigger
-                    id="concession-cat"
-                    data-ocid="fee-collection.concession.select"
-                    className="bg-white border-gray-300 max-w-sm"
+                    id="fee-structure"
+                    data-ocid="fee-collection.fee_structure.select"
+                    className="w-full bg-white border-gray-300 text-sm"
                   >
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {CONCESSION_CATEGORIES.map((c) => (
+                    {FEE_STRUCTURE_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.id} value={String(opt.id)}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* ── Row 2: Class ── */}
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="class-select"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Class
+                </Label>
+                <Select value={selectedClass} onValueChange={setSelectedClass}>
+                  <SelectTrigger
+                    id="class-select"
+                    data-ocid="fee-collection.class.select"
+                    className="w-full bg-white border-gray-300 text-sm"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CLASS_OPTIONS.map((c) => (
                       <SelectItem key={c} value={c}>
                         {c}
                       </SelectItem>
@@ -806,16 +557,104 @@ export default function FeeCollectionPage() {
                 </Select>
               </div>
 
-              {/* Student badge */}
+              {/* ── Row 3: Admission No. ── */}
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="admission-no"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Admission No.
+                </Label>
+                <Select
+                  value={selectedAdmissionNo}
+                  onValueChange={handleAdmissionNoChange}
+                >
+                  <SelectTrigger
+                    id="admission-no"
+                    data-ocid="fee-collection.admission_no.select"
+                    className="w-full bg-white border-gray-300 text-sm"
+                  >
+                    <SelectValue placeholder="-- Select --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {studentsForClass.length === 0 ? (
+                      <SelectItem value="none" disabled>
+                        No students in this class
+                      </SelectItem>
+                    ) : (
+                      studentsForClass.map((s) => (
+                        <SelectItem key={s.admissionNo} value={s.admissionNo}>
+                          {s.admissionNo}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* ── Row 4: Student Name ── */}
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="student-name"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Student Name
+                </Label>
+                <Select
+                  value={selectedStudentName}
+                  onValueChange={handleStudentNameChange}
+                >
+                  <SelectTrigger
+                    id="student-name"
+                    data-ocid="fee-collection.student_name.select"
+                    className="w-full bg-white border-gray-300 text-sm"
+                  >
+                    <SelectValue placeholder="-- Select --" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {studentsForClass.length === 0 ? (
+                      <SelectItem value="none" disabled>
+                        No students in this class
+                      </SelectItem>
+                    ) : (
+                      studentsForClass.map((s) => (
+                        <SelectItem key={s.id} value={s.name}>
+                          {s.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* ── Row 5: Concession Category — plain text input ── */}
+              <div className="space-y-1.5">
+                <Label
+                  htmlFor="concession-cat"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Concession Category
+                </Label>
+                <Input
+                  id="concession-cat"
+                  data-ocid="fee-collection.concession.input"
+                  value={concessionCategory}
+                  onChange={(e) => setConcessionCategory(e.target.value)}
+                  placeholder="None"
+                  className="w-full bg-white border-gray-300 text-sm"
+                />
+              </div>
+
+              {/* Student badge — subtle, only when selected */}
               <AnimatePresence>
                 {selectedStudentName && (
                   <motion.div
-                    initial={{ opacity: 0, y: -6 }}
+                    initial={{ opacity: 0, y: -4 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0 }}
-                    className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-lg px-4 py-2.5"
+                    className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded px-3 py-2"
                   >
-                    <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                    <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
                       {selectedStudentName
                         .split(" ")
                         .map((w) => w[0])
@@ -824,15 +663,15 @@ export default function FeeCollectionPage() {
                         .slice(0, 2)}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-blue-900 text-sm">
+                      <p className="font-semibold text-blue-900 text-sm">
                         {selectedStudentName}
                       </p>
-                      <p className="text-xs text-blue-600">
+                      <p className="text-xs text-blue-500">
                         {selectedAdmissionNo} · {selectedClass}
                       </p>
                     </div>
-                    {concessionCategory !== "None" && (
-                      <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100">
+                    {concessionCategory && concessionCategory !== "None" && (
+                      <Badge className="bg-green-100 text-green-700 border-green-200 hover:bg-green-100 text-xs">
                         {concessionCategory}
                       </Badge>
                     )}
@@ -841,26 +680,26 @@ export default function FeeCollectionPage() {
               </AnimatePresence>
 
               {/* ── Fee Table ── */}
-              <div className="overflow-x-auto rounded-lg border border-gray-200">
-                <table className="w-full text-sm">
+              <div className="border border-gray-200 rounded overflow-hidden">
+                <table className="w-full text-sm border-collapse">
                   <thead>
-                    <tr className="bg-gray-50 border-b border-gray-200">
-                      <th className="text-left px-4 py-3 font-semibold text-gray-700 w-40">
+                    <tr className="bg-gray-100 border-b border-gray-200">
+                      <th className="text-left px-4 py-2.5 font-semibold text-gray-700 text-xs uppercase tracking-wide">
                         Particular
                       </th>
-                      <th className="text-left px-3 py-3 font-semibold text-gray-700 w-36">
+                      <th className="text-left px-3 py-2.5 font-semibold text-gray-700 text-xs uppercase tracking-wide w-36">
                         Period
                       </th>
-                      <th className="text-right px-3 py-3 font-semibold text-gray-700 w-24">
+                      <th className="text-right px-3 py-2.5 font-semibold text-gray-700 text-xs uppercase tracking-wide w-28">
                         Fee Amount
                       </th>
-                      <th className="text-right px-3 py-3 font-semibold text-gray-700 w-24">
+                      <th className="text-right px-3 py-2.5 font-semibold text-gray-700 text-xs uppercase tracking-wide w-24">
                         Concession
                       </th>
-                      <th className="text-right px-3 py-3 font-semibold text-gray-700 w-24">
+                      <th className="text-right px-3 py-2.5 font-semibold text-gray-700 text-xs uppercase tracking-wide w-24">
                         Expected
                       </th>
-                      <th className="text-right px-3 py-3 font-semibold text-gray-700 w-28">
+                      <th className="text-right px-3 py-2.5 font-semibold text-gray-700 text-xs uppercase tracking-wide w-28">
                         Amount Paid
                       </th>
                     </tr>
@@ -870,6 +709,7 @@ export default function FeeCollectionPage() {
                       <tr>
                         <td
                           colSpan={6}
+                          data-ocid="fee-collection.empty_state"
                           className="text-center py-8 text-gray-400 text-sm"
                         >
                           No fee heads found for this class
@@ -879,42 +719,46 @@ export default function FeeCollectionPage() {
                       feeRows.map((row, idx) => (
                         <tr
                           key={row.feeHeadId}
-                          className="border-b border-gray-100 last:border-0 hover:bg-gray-50/60 transition-colors"
+                          data-ocid={`fee-collection.row.${idx + 1}`}
+                          className="border-b border-gray-100 last:border-0 bg-white hover:bg-gray-50 transition-colors"
                         >
-                          <td className="px-4 py-2.5 text-gray-800 font-medium text-sm">
+                          {/* Particular */}
+                          <td className="px-4 py-2.5 text-gray-800 text-sm">
                             {row.particular}
                           </td>
+                          {/* Period — inline native select to closely match reference */}
                           <td className="px-3 py-2">
-                            <Select
+                            <select
+                              data-ocid={`fee-collection.period.select.${idx + 1}`}
                               value={row.period}
-                              onValueChange={(v) => updateRow(idx, "period", v)}
+                              onChange={(e) =>
+                                updateRow(idx, "period", e.target.value)
+                              }
+                              className="h-8 text-xs border border-gray-300 rounded bg-white px-2 w-32 text-gray-700 focus:outline-none focus:ring-1 focus:ring-blue-400"
                             >
-                              <SelectTrigger
-                                data-ocid={`fee-collection.period.select.${idx + 1}`}
-                                className="h-8 text-xs border-gray-300 bg-white w-32"
-                              >
-                                <SelectValue placeholder="-- Select F" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PERIODS.map((p) => (
-                                  <SelectItem key={p} value={p}>
-                                    {p}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                              <option value="">-- Select F</option>
+                              {PERIODS.map((p) => (
+                                <option key={p} value={p}>
+                                  {p}
+                                </option>
+                              ))}
+                            </select>
                           </td>
-                          <td className="px-3 py-2.5 text-right text-gray-700">
+                          {/* Fee Amount */}
+                          <td className="px-3 py-2.5 text-right text-gray-700 text-sm">
                             {row.feeAmount.toLocaleString("en-IN")}
                           </td>
-                          <td className="px-3 py-2.5 text-right text-gray-600">
+                          {/* Concession */}
+                          <td className="px-3 py-2.5 text-right text-gray-600 text-sm">
                             {row.concession}
                           </td>
-                          <td className="px-3 py-2.5 text-right text-gray-600">
+                          {/* Expected */}
+                          <td className="px-3 py-2.5 text-right text-gray-600 text-sm">
                             {row.expected}
                           </td>
+                          {/* Amount Paid */}
                           <td className="px-3 py-2">
-                            <Input
+                            <input
                               data-ocid={`fee-collection.amount_paid.input.${idx + 1}`}
                               type="number"
                               min={0}
@@ -924,7 +768,7 @@ export default function FeeCollectionPage() {
                                 updateRow(idx, "amountPaid", e.target.value)
                               }
                               placeholder=""
-                              className="h-8 text-xs text-right w-24 border-gray-300 bg-white"
+                              className="h-8 text-xs text-right w-24 border border-gray-300 rounded bg-white px-2 focus:outline-none focus:ring-1 focus:ring-blue-400"
                             />
                           </td>
                         </tr>
@@ -933,14 +777,14 @@ export default function FeeCollectionPage() {
                   </tbody>
                   {feeRows.length > 0 && (
                     <tfoot>
-                      <tr className="bg-blue-50 border-t border-blue-100">
+                      <tr className="bg-gray-50 border-t border-gray-200">
                         <td
                           colSpan={5}
-                          className="px-4 py-3 font-bold text-gray-800 text-sm"
+                          className="px-4 py-2.5 font-semibold text-gray-700 text-sm"
                         >
                           Total Amount Payable
                         </td>
-                        <td className="px-3 py-3 text-right font-bold text-blue-700 text-sm">
+                        <td className="px-3 py-2.5 text-right font-bold text-blue-700 text-sm">
                           {fmt(total)}
                         </td>
                       </tr>
@@ -949,68 +793,76 @@ export default function FeeCollectionPage() {
                 </table>
               </div>
 
-              {/* Payment details + submit */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-700">
-                    Payment Method
-                  </Label>
-                  <Select
-                    value={paymentMethod}
-                    onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
-                  >
-                    <SelectTrigger
-                      data-ocid="fee-collection.payment_method.select"
-                      className="bg-white border-gray-300"
+              {/* ── Payment Details ── */}
+              <div className="pt-2 border-t border-gray-100">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                  Payment Details
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Payment Method
+                    </Label>
+                    <Select
+                      value={paymentMethod}
+                      onValueChange={(v) =>
+                        setPaymentMethod(v as PaymentMethod)
+                      }
                     >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(["Cash", "Online", "Cheque", "DD"] as const).map(
-                        (m) => (
-                          <SelectItem key={m} value={m}>
-                            {m}
-                          </SelectItem>
-                        ),
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+                      <SelectTrigger
+                        data-ocid="fee-collection.payment_method.select"
+                        className="bg-white border-gray-300 text-sm"
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(["Cash", "Online", "Cheque", "DD"] as const).map(
+                          (m) => (
+                            <SelectItem key={m} value={m}>
+                              {m}
+                            </SelectItem>
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-700">
-                    Payment Date
-                  </Label>
-                  <Input
-                    data-ocid="fee-collection.payment_date.input"
-                    type="date"
-                    value={paymentDate}
-                    onChange={(e) => setPaymentDate(e.target.value)}
-                    className="bg-white border-gray-300"
-                  />
-                </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Payment Date
+                    </Label>
+                    <Input
+                      data-ocid="fee-collection.payment_date.input"
+                      type="date"
+                      value={paymentDate}
+                      onChange={(e) => setPaymentDate(e.target.value)}
+                      className="bg-white border-gray-300 text-sm"
+                    />
+                  </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-medium text-gray-700">
-                    Remarks (optional)
-                  </Label>
-                  <Input
-                    data-ocid="fee-collection.remarks.input"
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    placeholder="Add any notes..."
-                    className="bg-white border-gray-300"
-                  />
+                  <div className="space-y-1.5">
+                    <Label className="text-sm font-medium text-gray-700">
+                      Remarks (optional)
+                    </Label>
+                    <Input
+                      data-ocid="fee-collection.remarks.input"
+                      value={remarks}
+                      onChange={(e) => setRemarks(e.target.value)}
+                      placeholder="Add any notes..."
+                      className="bg-white border-gray-300 text-sm"
+                    />
+                  </div>
                 </div>
               </div>
 
+              {/* ── Submit ── */}
               <div className="flex justify-end pt-1">
                 <Button
                   data-ocid="fee-collection.submit_button"
                   onClick={handleCollect}
                   disabled={collecting || total === 0}
-                  className="bg-blue-600 hover:bg-blue-700 text-white gap-2 min-w-48"
-                  size="lg"
+                  className="bg-blue-600 hover:bg-blue-700 text-white gap-2 min-w-52"
+                  size="default"
                 >
                   {collecting ? (
                     <>
@@ -1019,8 +871,8 @@ export default function FeeCollectionPage() {
                     </>
                   ) : (
                     <>
-                      <CreditCard className="w-4 h-4" /> Collect &amp; Generate
-                      Receipt
+                      <CreditCard className="w-4 h-4" />
+                      Collect &amp; Generate Receipt
                     </>
                   )}
                 </Button>

@@ -23,7 +23,6 @@ import {
   MessageSquare,
   Settings,
   Shield,
-  UserCheck,
   UserCircle,
   UserPlus,
   Users,
@@ -154,16 +153,9 @@ function getMenuItems(role: string): NavItem[] {
           { label: "All Staff", href: "/dashboard" },
           { label: "Add Staff", href: "/dashboard" },
           { label: "Staff Attendance", href: "/dashboard" },
-        ],
-      },
-      {
-        label: "Teachers",
-        icon: <UserCheck className="w-5 h-5" />,
-        groupOcid: "sidebar.teachers_group_toggle",
-        children: [
           { label: "All Teachers", href: "/dashboard" },
           { label: "Add Teacher", href: "/dashboard" },
-          { label: "Assignments", href: "/dashboard" },
+          { label: "Teacher Assignments", href: "/dashboard" },
         ],
       },
       {
