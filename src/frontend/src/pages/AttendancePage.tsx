@@ -28,12 +28,39 @@ import {
   XCircle,
 } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import Sidebar from "../components/Sidebar";
 import { SEED_DATA, type Student } from "../data/students";
 import { useCallerUserProfile, useLogout } from "../hooks/useQueries";
 import { exportToExcel, exportToPDF } from "../utils/exportUtils";
+
+// ─── AnimatedCounter (local copy) ─────────────────────────────────────────────
+
+function AnimatedCounter({ target }: { target: number }) {
+  const [display, setDisplay] = useState(0);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const start = performance.now();
+    const duration = 1000;
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - (1 - progress) ** 3;
+      setDisplay(Math.round(eased * target));
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [target]);
+
+  return <>{display}</>;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -354,6 +381,98 @@ export default function AttendancePage() {
             </div>
           </div>
         </motion.div>
+
+        {/* School-wide Summary Stats */}
+        <div className="bg-white border-b border-gray-100 px-6 py-4 flex-shrink-0">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+            {[
+              {
+                label: "Total Students",
+                value: 520,
+                icon: <Users className="w-5 h-5" />,
+                color: "text-blue-600",
+                bg: "bg-blue-50",
+                border: "border-blue-100",
+                delay: 0.04,
+              },
+              {
+                label: "Present Today",
+                value: 478,
+                icon: <CheckCircle2 className="w-5 h-5" />,
+                color: "text-green-600",
+                bg: "bg-green-50",
+                border: "border-green-100",
+                delay: 0.08,
+              },
+              {
+                label: "Absent Today",
+                value: 30,
+                icon: <UserX className="w-5 h-5" />,
+                color: "text-red-600",
+                bg: "bg-red-50",
+                border: "border-red-100",
+                delay: 0.12,
+              },
+              {
+                label: "Late Today",
+                value: 12,
+                icon: <Clock className="w-5 h-5" />,
+                color: "text-amber-600",
+                bg: "bg-amber-50",
+                border: "border-amber-100",
+                delay: 0.16,
+              },
+            ].map((s) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: s.delay }}
+                className={`bg-white rounded-xl border ${s.border} p-3 flex items-center gap-3 shadow-sm`}
+              >
+                <div
+                  className={`w-9 h-9 rounded-xl ${s.bg} flex items-center justify-center flex-shrink-0`}
+                >
+                  <span className={s.color}>{s.icon}</span>
+                </div>
+                <div>
+                  <p className={`text-xl font-bold ${s.color}`}>
+                    <AnimatedCounter target={s.value} />
+                  </p>
+                  <p className="text-xs text-gray-500">{s.label}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Attendance Rate Progress Bar */}
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="bg-gray-50 rounded-xl p-3 border border-gray-100"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-semibold text-gray-600">
+                Today's Attendance Rate
+              </span>
+              <span className="text-sm font-bold text-green-700">91.9%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+              <motion.div
+                className="bg-green-500 h-2.5 rounded-full"
+                initial={{ width: "0%" }}
+                animate={{ width: "91.9%" }}
+                transition={{ duration: 1, delay: 0.3, ease: "easeOut" }}
+              />
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-xs text-gray-400">0%</span>
+              <span className="text-xs text-gray-400">Target: 95%</span>
+              <span className="text-xs text-gray-400">100%</span>
+            </div>
+          </motion.div>
+        </div>
 
         {/* Filters */}
         <motion.div

@@ -1,36 +1,76 @@
 # CYMI School Management
 
 ## Current State
-The app has: Login (4 roles), Dashboard, Students (520 members), Attendance, Transport (Routes, Vehicles, Drivers, Assignments, Reports), User Management, System Settings, Reports. Sidebar is collapsible with scroll support.
-
-Finance section in the sidebar currently has non-functional "Fee Management" and "Reports" placeholders.
+Full-stack school management system with:
+- Role-based login (SuperAdmin, Admin, Parent, Student)
+- Dashboard with animated counters, live clock, donut/bar/area charts, quick actions, activity feed
+- Students module (520 records, CRUD, export Excel/PDF)
+- Attendance module (mark present/absent/late, export)
+- Finance module (Fee Structure, Collection, Register, Receipts, History, Fee Reports)
+- Transportation module (Routes, Vehicles, Drivers, Assignments, Reports)
+- Reports, User Management, System Settings pages
+- Sidebar with scrollable dropdown groups, collapse toggle
 
 ## Requested Changes (Diff)
 
 ### Add
-- `/fees/structure` — Fee Structure page: define fee categories (Tuition, Transport, Library, Lab, Sports, Exam, etc.), amounts per class/grade, due dates, late fee rules. Table with add/edit/delete. Export Excel/PDF.
-- `/fees/collection` — Fee Collection page: collect fees for a student by searching name/admission number. Select fee heads, apply discounts/waivers, generate receipt. Shows collection summary stats (today's collection, pending, overdue).
-- `/fees/register` — Fee Register page: full ledger view of all fee transactions across all students. Filters by class, section, fee type, month, status (paid/partial/pending/overdue). Pagination. Export Excel/PDF.
-- `/fees/receipts` — Receipts page: search and view/print/download individual payment receipts. Each receipt shows student details, fee heads, amount paid, payment method, receipt number, date.
-- `/fees/history` — Fee History page: per-student fee payment history timeline. Search student, view all past payments, outstanding balance, dues summary.
-- `/fees/reports` — Fee Reports page: charts for monthly collection trend, fee collection by class, outstanding dues breakdown. Export options.
+- **Dashboard**: Additional KPI cards with live-simulated trend indicators (up/down arrows + percentage change vs last week), total revenue this month, new admissions this month
+- **Dashboard**: "Top Performing Students" mini-table (top 5 by marks)
+- **Dashboard**: "Upcoming Events" timeline panel (5 events: exams, meetings, holidays)
+- **Dashboard**: "Gender Distribution" mini donut next to existing composition chart
+- **Finance / Fee Collection**: Animated progress bar showing monthly collection target vs actual (e.g. target ₹5L, collected ₹3.4L)
+- **Finance / Fee History**: Filterable by year, month, status; animated row entries; summary totals
+- **Attendance**: Summary stats cards at top (Total Students, Present Today, Absent Today, Late Today) with animated count-up; attendance % progress bar per class/grade filter
+- **Reports page**: Add a "Grade-wise Enrollment" bar chart and a "Fee Collection vs Target" grouped bar chart; existing charts get animated entrance
+- **Sidebar**: Active route highlight — currently active link should have a visually distinct active state (filled background, brighter text)
+- **All pages**: Consistent page-level entrance animation (fade-in + slight slide-up) on every main content area that doesn't already have it
+- **Student Profile**: Progress/performance radial chart showing subject-wise marks visually
+- **Transport Reports**: Add a "Route Utilization" radial/bar chart with animated fill
 
 ### Modify
-- `Sidebar.tsx`: Update Finance group children with hrefs for all 6 new fee pages.
-- `App.tsx`: Register 6 new routes for fee pages.
+- **Dashboard stat cards**: Add trend badge (e.g. "+12 this month" in green, or "-3" in red) below each count
+- **Quick Actions**: Make buttons navigate to the correct pages (Add Student → /students?action=add, Mark Attendance → /attendance, View Reports → /reports, Fee Collection → /fees/collection)
+- **Notification bell dropdown**: Widen to 320px, add "Mark all read" button, timestamps on each notification
+- **Activity feed**: Add "Load more" button that shows 3 additional items
+- **Fee Collection stats**: Animate the 4 stat cards with count-up on mount
 
 ### Remove
-- Nothing removed.
+- Nothing removed
 
 ## Implementation Plan
-1. Create 6 fee page components in `src/frontend/src/pages/fees/`:
-   - `FeeStructurePage.tsx`
-   - `FeeCollectionPage.tsx`
-   - `FeeRegisterPage.tsx`
-   - `FeeReceiptsPage.tsx`
-   - `FeeHistoryPage.tsx`
-   - `FeeReportsPage.tsx`
-2. Each page includes: header with title + export dropdown, filter bar, data table or form, mock data, add/edit dialogs, fully wired export (Excel via SheetJS + PDF via jsPDF or print).
-3. Update `Sidebar.tsx` Finance group children with route hrefs.
-4. Update `App.tsx` with 6 new route definitions and imports.
-5. Validate (typecheck + lint + build).
+1. Update DashboardPage.tsx:
+   - Add trend badges to all 4 stat cards
+   - Add 2 new KPI cards (Revenue this month, New Admissions)
+   - Wire Quick Actions buttons to correct routes via useNavigate
+   - Expand notification bell: 320px, mark-all-read, timestamps
+   - Add "Load more" to activity feed (show 6 initially, expand by 3)
+   - Add "Upcoming Events" timeline panel
+   - Add "Top Performing Students" mini-table
+   - Add gender distribution mini-donut alongside composition chart
+
+2. Update AttendancePage.tsx:
+   - Add summary stat cards at top with animated counters
+   - Add attendance % progress bar per current grade filter
+
+3. Update ReportsPage.tsx:
+   - Add Grade-wise Enrollment bar chart
+   - Add Fee Collection vs Target grouped bar chart
+   - Apply animated entrance to all chart panels
+
+4. Update FeeCollectionPage.tsx:
+   - Animate stat cards with count-up on mount
+   - Add monthly collection target progress bar
+
+5. Update FeeHistoryPage.tsx:
+   - Add year/month/status filter controls
+   - Animate row entries on filter change
+   - Add summary totals footer
+
+6. Update StudentProfilePage.tsx:
+   - Add radial/spider chart for subject-wise marks
+
+7. Update TransportReportsPage.tsx:
+   - Add route utilization animated bar chart
+
+8. Update Sidebar.tsx:
+   - Add active route detection and highlight styling for current route

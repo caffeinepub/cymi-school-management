@@ -29,10 +29,93 @@ import {
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useEffect, useState } from "react";
+import {
+  PolarAngleAxis,
+  PolarGrid,
+  Radar,
+  RadarChart,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
 import Sidebar from "../components/Sidebar";
 import { SEED_DATA, type Student, seededRandom } from "../data/students";
 import { useCallerUserProfile, useLogout } from "../hooks/useQueries";
 import { exportToExcel, exportToPDF } from "../utils/exportUtils";
+
+// ─── Subject Performance Radar ────────────────────────────────────────────────
+
+const SUBJECT_PERFORMANCE = [
+  { subject: "Maths", marks: 94 },
+  { subject: "Science", marks: 95 },
+  { subject: "English", marks: 90 },
+  { subject: "History", marks: 75 },
+  { subject: "Computer", marks: 88 },
+  { subject: "Phys Ed", marks: 80 },
+];
+
+function SubjectRadarChart() {
+  return (
+    <motion.div
+      data-ocid="profile.radar.panel"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.3 }}
+      className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+    >
+      <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
+        Subject Performance Overview
+      </h3>
+      <ResponsiveContainer width="100%" height={260}>
+        <RadarChart
+          data={SUBJECT_PERFORMANCE}
+          cx="50%"
+          cy="50%"
+          outerRadius="75%"
+        >
+          <PolarGrid stroke="#e5e7eb" />
+          <PolarAngleAxis
+            dataKey="subject"
+            tick={{ fontSize: 11, fill: "#6b7280", fontWeight: 600 }}
+          />
+          <Radar
+            name="Marks"
+            dataKey="marks"
+            stroke="#3B82F6"
+            fill="#3B82F6"
+            fillOpacity={0.25}
+            strokeWidth={2}
+            isAnimationActive
+            animationDuration={800}
+          />
+          <Tooltip
+            formatter={(v: number) => [`${v}/100`, "Score"]}
+            contentStyle={{
+              borderRadius: 8,
+              border: "1px solid #e5e7eb",
+              fontSize: 12,
+            }}
+          />
+        </RadarChart>
+      </ResponsiveContainer>
+      <div className="grid grid-cols-3 gap-2 mt-2">
+        {SUBJECT_PERFORMANCE.map((s) => (
+          <div
+            key={s.subject}
+            className="flex items-center gap-1.5 bg-blue-50 rounded-lg px-2 py-1.5"
+          >
+            <div className="w-2 h-2 rounded-full bg-blue-500 flex-shrink-0" />
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-gray-700 truncate">
+                {s.subject}
+              </p>
+              <p className="text-xs font-bold text-blue-700">{s.marks}%</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
 
 // ─── Attendance Ring ──────────────────────────────────────────────────────────
 
@@ -417,79 +500,84 @@ function AcademicsTab({ rows }: { rows: AcademicRow[] }) {
   const avgGrade = getGrade(avg);
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-      <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/60 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
-          Academic Performance — Latest Term
-        </h3>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500 font-medium">Average:</span>
-          <span className="text-sm font-bold text-gray-900">{avg}/100</span>
-          <span
-            className={`text-xs font-bold px-2 py-0.5 rounded-full ${avgGrade.color}`}
-          >
-            {avgGrade.letter}
-          </span>
-        </div>
-      </div>
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-gray-50/40">
-            <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Subject
-            </TableHead>
-            <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Marks
-            </TableHead>
-            <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Out of
-            </TableHead>
-            <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Percentage
-            </TableHead>
-            <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-              Grade
-            </TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row, idx) => (
-            <TableRow
-              key={row.subject}
-              data-ocid={`profile.academics.row.${idx + 1}`}
-              className="border-b border-gray-50 last:border-0"
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/60 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+            Academic Performance — Latest Term
+          </h3>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500 font-medium">Average:</span>
+            <span className="text-sm font-bold text-gray-900">{avg}/100</span>
+            <span
+              className={`text-xs font-bold px-2 py-0.5 rounded-full ${avgGrade.color}`}
             >
-              <TableCell className="text-sm font-semibold text-gray-800 py-3">
-                {row.subject}
-              </TableCell>
-              <TableCell className="text-sm font-bold text-gray-900 py-3">
-                {row.marks}
-              </TableCell>
-              <TableCell className="text-sm text-gray-500 py-3">100</TableCell>
-              <TableCell className="py-3">
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 max-w-[100px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-blue-500 transition-all duration-700"
-                      style={{ width: `${row.marks}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-gray-600 font-medium">
-                    {row.marks}%
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell className="py-3">
-                <span
-                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${row.grade.color}`}
-                >
-                  {row.grade.letter}
-                </span>
-              </TableCell>
+              {avgGrade.letter}
+            </span>
+          </div>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-gray-50/40">
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Subject
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Marks
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Out of
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Percentage
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Grade
+              </TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row, idx) => (
+              <TableRow
+                key={row.subject}
+                data-ocid={`profile.academics.row.${idx + 1}`}
+                className="border-b border-gray-50 last:border-0"
+              >
+                <TableCell className="text-sm font-semibold text-gray-800 py-3">
+                  {row.subject}
+                </TableCell>
+                <TableCell className="text-sm font-bold text-gray-900 py-3">
+                  {row.marks}
+                </TableCell>
+                <TableCell className="text-sm text-gray-500 py-3">
+                  100
+                </TableCell>
+                <TableCell className="py-3">
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 max-w-[100px] h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-blue-500 transition-all duration-700"
+                        style={{ width: `${row.marks}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-600 font-medium">
+                      {row.marks}%
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="py-3">
+                  <span
+                    className={`text-xs font-bold px-2 py-0.5 rounded-full ${row.grade.color}`}
+                  >
+                    {row.grade.letter}
+                  </span>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      <SubjectRadarChart />
     </div>
   );
 }

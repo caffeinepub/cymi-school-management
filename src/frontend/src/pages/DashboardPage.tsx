@@ -5,13 +5,18 @@ import {
   BookOpen,
   BookOpenCheck,
   CalendarCheck,
+  CheckCheck,
   ClipboardList,
   CreditCard,
   GraduationCap,
   Loader2,
   Settings,
   Shield,
+  TrendingDown,
+  TrendingUp,
+  UserPlus,
   Users,
+  X,
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
@@ -231,7 +236,7 @@ function SchoolCompositionChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.5 }}
-      className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-8"
+      className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-full"
     >
       <div className="mb-5">
         <h2 className="text-base font-bold text-gray-800">
@@ -354,7 +359,6 @@ const ACTIVITY_FEED = [
     text: "New student Riya Patel admitted to Grade 7",
     time: "2 min ago",
     Icon: GraduationCap,
-    color: "blue",
     bg: "bg-blue-50",
     fg: "text-blue-600",
   },
@@ -363,7 +367,6 @@ const ACTIVITY_FEED = [
     text: "Fee payment received from Arjun Kumar – ₹12,500",
     time: "15 min ago",
     Icon: CreditCard,
-    color: "green",
     bg: "bg-green-50",
     fg: "text-green-600",
   },
@@ -372,7 +375,6 @@ const ACTIVITY_FEED = [
     text: "Attendance marked for Grade 5 – Section A",
     time: "1 hr ago",
     Icon: CalendarCheck,
-    color: "amber",
     bg: "bg-amber-50",
     fg: "text-amber-600",
   },
@@ -381,7 +383,6 @@ const ACTIVITY_FEED = [
     text: "New student Dev Sharma admitted to Grade 9",
     time: "3 hrs ago",
     Icon: GraduationCap,
-    color: "blue",
     bg: "bg-blue-50",
     fg: "text-blue-600",
   },
@@ -390,7 +391,6 @@ const ACTIVITY_FEED = [
     text: "Fee payment received from Meena Reddy – ₹8,200",
     time: "5 hrs ago",
     Icon: CreditCard,
-    color: "green",
     bg: "bg-green-50",
     fg: "text-green-600",
   },
@@ -399,9 +399,32 @@ const ACTIVITY_FEED = [
     text: "Exam schedule published for Grade 10",
     time: "Yesterday",
     Icon: BookOpenCheck,
-    color: "purple",
     bg: "bg-purple-50",
     fg: "text-purple-600",
+  },
+  {
+    type: "admission",
+    text: "New student Priya Singh admitted to Grade 6",
+    time: "Yesterday, 3 pm",
+    Icon: GraduationCap,
+    bg: "bg-blue-50",
+    fg: "text-blue-600",
+  },
+  {
+    type: "attendance",
+    text: "Attendance marked for Grade 8 – Section B",
+    time: "2 days ago",
+    Icon: CalendarCheck,
+    bg: "bg-amber-50",
+    fg: "text-amber-600",
+  },
+  {
+    type: "fee",
+    text: "Fee overdue alert sent to 23 students",
+    time: "2 days ago",
+    Icon: CreditCard,
+    bg: "bg-red-50",
+    fg: "text-red-600",
   },
 ];
 
@@ -510,6 +533,7 @@ const FEE_HISTORY = [
 // ── Quick Actions ─────────────────────────────────────────────────────────────
 
 function QuickActionsPanel() {
+  const navigate = useNavigate();
   const actions = [
     {
       label: "Add Student",
@@ -517,6 +541,7 @@ function QuickActionsPanel() {
       bg: "bg-blue-50 hover:bg-blue-100",
       fg: "text-blue-700",
       ocid: "dashboard.add_student.button",
+      href: "/students?action=add",
     },
     {
       label: "Mark Attendance",
@@ -524,6 +549,7 @@ function QuickActionsPanel() {
       bg: "bg-green-50 hover:bg-green-100",
       fg: "text-green-700",
       ocid: "dashboard.mark_attendance.button",
+      href: "/attendance",
     },
     {
       label: "View Reports",
@@ -531,6 +557,7 @@ function QuickActionsPanel() {
       bg: "bg-purple-50 hover:bg-purple-100",
       fg: "text-purple-700",
       ocid: "dashboard.view_reports.button",
+      href: "/reports",
     },
     {
       label: "Fee Collection",
@@ -538,6 +565,7 @@ function QuickActionsPanel() {
       bg: "bg-amber-50 hover:bg-amber-100",
       fg: "text-amber-700",
       ocid: "dashboard.fee_collection.button",
+      href: "/fees/collection",
     },
   ];
 
@@ -553,12 +581,13 @@ function QuickActionsPanel() {
         Quick Actions
       </h2>
       <div className="grid grid-cols-2 gap-3">
-        {actions.map(({ label, Icon, bg, fg, ocid }) => (
+        {actions.map(({ label, Icon, bg, fg, ocid, href }) => (
           <motion.button
             key={label}
             data-ocid={ocid}
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.97 }}
+            onClick={() => navigate({ to: href })}
             className={`flex flex-col items-center justify-center gap-2 py-4 rounded-xl ${bg} transition-colors cursor-pointer`}
           >
             <Icon className={`w-6 h-6 ${fg}`} />
@@ -572,7 +601,13 @@ function QuickActionsPanel() {
 
 // ── Recent Activity Feed ──────────────────────────────────────────────────────
 
+const INITIAL_ACTIVITY_COUNT = 6;
+
 function RecentActivityPanel() {
+  const [visibleCount, setVisibleCount] = useState(INITIAL_ACTIVITY_COUNT);
+  const visibleItems = ACTIVITY_FEED.slice(0, visibleCount);
+  const hasMore = visibleCount < ACTIVITY_FEED.length;
+
   return (
     <motion.div
       data-ocid="dashboard.activity_feed.panel"
@@ -584,28 +619,54 @@ function RecentActivityPanel() {
       <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">
         Recent Activity
       </h2>
-      <div className="max-h-64 overflow-y-auto space-y-0 pr-1">
-        {ACTIVITY_FEED.map((item, idx) => (
-          <div key={item.text}>
-            <div className="flex items-start gap-3 py-2.5">
-              <div
-                className={`w-8 h-8 rounded-full ${item.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}
-              >
-                <item.Icon className={`w-4 h-4 ${item.fg}`} />
+      <div className="space-y-0 pr-1">
+        <AnimatePresence>
+          {visibleItems.map((item, idx) => (
+            <motion.div
+              key={item.text}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: 0.25,
+                delay:
+                  idx >= INITIAL_ACTIVITY_COUNT
+                    ? (idx - INITIAL_ACTIVITY_COUNT) * 0.06
+                    : 0,
+              }}
+            >
+              <div className="flex items-start gap-3 py-2.5">
+                <div
+                  className={`w-8 h-8 rounded-full ${item.bg} flex items-center justify-center flex-shrink-0 mt-0.5`}
+                >
+                  <item.Icon className={`w-4 h-4 ${item.fg}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-700 leading-relaxed">
+                    {item.text}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">{item.time}</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-gray-700 leading-relaxed">
-                  {item.text}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">{item.time}</p>
-              </div>
-            </div>
-            {idx < ACTIVITY_FEED.length - 1 && (
-              <div className="border-t border-gray-50" />
-            )}
-          </div>
-        ))}
+              {idx < visibleItems.length - 1 && (
+                <div className="border-t border-gray-50" />
+              )}
+            </motion.div>
+          ))}
+        </AnimatePresence>
       </div>
+      {hasMore && (
+        <motion.button
+          data-ocid="dashboard.activity_feed.button"
+          onClick={() =>
+            setVisibleCount((c) => Math.min(c + 3, ACTIVITY_FEED.length))
+          }
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full mt-3 pt-3 border-t border-gray-100 text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
+        >
+          Load more ({ACTIVITY_FEED.length - visibleCount} remaining)
+        </motion.button>
+      )}
     </motion.div>
   );
 }
@@ -728,6 +789,227 @@ function ChartsRow() {
   );
 }
 
+// ── Upcoming Events Timeline ──────────────────────────────────────────────────
+
+const UPCOMING_EVENTS = [
+  {
+    title: "Parent-Teacher Meeting",
+    date: "Mar 10, 2026",
+    color: "bg-blue-500",
+    dotBg: "bg-blue-100",
+    dotFg: "text-blue-700",
+  },
+  {
+    title: "Grade 10 Final Exams Begin",
+    date: "Mar 12, 2026",
+    color: "bg-red-500",
+    dotBg: "bg-red-100",
+    dotFg: "text-red-700",
+  },
+  {
+    title: "Spring Holiday",
+    date: "Mar 20–22, 2026",
+    color: "bg-green-500",
+    dotBg: "bg-green-100",
+    dotFg: "text-green-700",
+  },
+  {
+    title: "Annual Sports Day",
+    date: "Mar 28, 2026",
+    color: "bg-amber-500",
+    dotBg: "bg-amber-100",
+    dotFg: "text-amber-700",
+  },
+  {
+    title: "New Term Starts",
+    date: "Apr 5, 2026",
+    color: "bg-purple-500",
+    dotBg: "bg-purple-100",
+    dotFg: "text-purple-700",
+  },
+];
+
+function UpcomingEventsPanel() {
+  return (
+    <motion.div
+      data-ocid="dashboard.events.panel"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.35 }}
+      className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
+    >
+      <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">
+        Upcoming Events
+      </h2>
+      <div className="space-y-3">
+        {UPCOMING_EVENTS.map((event, idx) => (
+          <motion.div
+            key={event.title}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.25, delay: 0.35 + idx * 0.05 }}
+            className="flex items-center gap-3"
+          >
+            <div
+              className={`w-2.5 h-2.5 rounded-full ${event.color} flex-shrink-0`}
+            />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-800 truncate">
+                {event.title}
+              </p>
+            </div>
+            <span
+              className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${event.dotBg} ${event.dotFg}`}
+            >
+              {event.date}
+            </span>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Top Performing Students ───────────────────────────────────────────────────
+
+const TOP_STUDENTS = [
+  { rank: 1, name: "Priya Nair", cls: "10A", pct: 96.4 },
+  { rank: 2, name: "Arjun Mehta", cls: "9B", pct: 95.8 },
+  { rank: 3, name: "Sneha Reddy", cls: "8A", pct: 95.1 },
+  { rank: 4, name: "Dev Kapoor", cls: "10B", pct: 94.7 },
+  { rank: 5, name: "Meera Patel", cls: "7A", pct: 93.9 },
+];
+
+const RANK_COLORS = [
+  "text-amber-500",
+  "text-gray-400",
+  "text-amber-700",
+  "text-gray-500",
+  "text-gray-500",
+];
+
+function TopStudentsPanel() {
+  return (
+    <motion.div
+      data-ocid="dashboard.top_students.panel"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.38 }}
+      className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
+    >
+      <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4">
+        Top Performing Students
+      </h2>
+      <div className="space-y-3">
+        {TOP_STUDENTS.map((s, idx) => (
+          <motion.div
+            key={s.name}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.25, delay: 0.38 + idx * 0.05 }}
+            className="flex items-center gap-3"
+          >
+            <span
+              className={`text-sm font-bold w-5 flex-shrink-0 ${RANK_COLORS[idx]}`}
+            >
+              {s.rank}
+            </span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-0.5">
+                <p className="text-sm font-semibold text-gray-800 truncate">
+                  {s.name}
+                </p>
+                <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                  Gr. {s.cls}
+                </span>
+              </div>
+              <div className="w-full bg-gray-100 rounded-full h-1.5">
+                <motion.div
+                  className="bg-blue-500 h-1.5 rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${s.pct}%` }}
+                  transition={{ duration: 0.8, delay: 0.4 + idx * 0.08 }}
+                />
+              </div>
+            </div>
+            <span className="text-xs font-bold text-blue-700 flex-shrink-0 w-10 text-right">
+              {s.pct}%
+            </span>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Gender Distribution Mini-Donut ────────────────────────────────────────────
+
+const GENDER_DATA = [
+  { name: "Male", value: 54, color: "#3B82F6" },
+  { name: "Female", value: 46, color: "#EC4899" },
+];
+
+function GenderDistributionCard() {
+  return (
+    <motion.div
+      data-ocid="dashboard.gender.card"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: 0.5 }}
+      className="bg-white rounded-xl shadow-sm border border-gray-100 p-5"
+    >
+      <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-3">
+        Gender Distribution
+      </h3>
+      <div className="flex items-center gap-4">
+        <ResponsiveContainer width={80} height={80}>
+          <PieChart>
+            <Pie
+              data={GENDER_DATA}
+              cx="50%"
+              cy="50%"
+              innerRadius={24}
+              outerRadius={38}
+              paddingAngle={2}
+              dataKey="value"
+              isAnimationActive
+              animationDuration={800}
+            >
+              {GENDER_DATA.map((entry) => (
+                <Cell
+                  key={entry.name}
+                  fill={entry.color}
+                  stroke="white"
+                  strokeWidth={2}
+                />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
+        <div className="space-y-2">
+          {GENDER_DATA.map((item) => (
+            <div key={item.name} className="flex items-center gap-2">
+              <span
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="text-xs text-gray-600 font-medium">
+                {item.name}
+              </span>
+              <span
+                className="text-xs font-bold ml-auto pl-2"
+                style={{ color: item.color }}
+              >
+                {item.value}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 // ── Admin & SuperAdmin shared panel content ───────────────────────────────────
 
 function AdminPanelContent({
@@ -745,30 +1027,36 @@ function AdminPanelContent({
 
   return (
     <>
-      {/* ── 4-col stat cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      {/* ── 6-col stat cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
         {/* Students */}
         <motion.div
           data-ocid="dashboard.stats.students_card"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.05 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow"
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1"
         >
-          <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
-            <Users className="w-6 h-6 text-blue-500" />
+          <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+            <Users className="w-5 h-5 text-blue-500" />
           </div>
           <div>
             <div className="text-xs text-gray-400 font-medium uppercase tracking-wide">
               Students
             </div>
             {statsLoading ? (
-              <div className="h-8 w-16 bg-gray-100 animate-pulse rounded mt-1" />
+              <div className="h-7 w-14 bg-gray-100 animate-pulse rounded mt-1" />
             ) : (
-              <div className="text-3xl font-bold text-gray-800 leading-none mt-1">
+              <div className="text-2xl font-bold text-gray-800 leading-none mt-0.5">
                 <AnimatedCounter target={studentCount} />
               </div>
             )}
+            <div className="flex items-center gap-0.5 mt-0.5">
+              <TrendingUp className="w-3 h-3 text-green-500" />
+              <span className="text-xs text-green-600 font-semibold">
+                +38 this month
+              </span>
+            </div>
           </div>
         </motion.div>
 
@@ -778,22 +1066,28 @@ function AdminPanelContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.09 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow"
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1"
         >
-          <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
-            <GraduationCap className="w-6 h-6 text-green-600" />
+          <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
+            <GraduationCap className="w-5 h-5 text-green-600" />
           </div>
           <div>
             <div className="text-xs text-gray-400 font-medium uppercase tracking-wide">
               Teachers
             </div>
             {statsLoading ? (
-              <div className="h-8 w-16 bg-gray-100 animate-pulse rounded mt-1" />
+              <div className="h-7 w-14 bg-gray-100 animate-pulse rounded mt-1" />
             ) : (
-              <div className="text-3xl font-bold text-gray-800 leading-none mt-1">
+              <div className="text-2xl font-bold text-gray-800 leading-none mt-0.5">
                 <AnimatedCounter target={teacherCount} />
               </div>
             )}
+            <div className="flex items-center gap-0.5 mt-0.5">
+              <TrendingUp className="w-3 h-3 text-green-500" />
+              <span className="text-xs text-green-600 font-semibold">
+                +2 this month
+              </span>
+            </div>
           </div>
         </motion.div>
 
@@ -802,19 +1096,23 @@ function AdminPanelContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.13 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow"
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1"
         >
-          <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
-            <BookOpen className="w-6 h-6 text-purple-500" />
+          <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
+            <BookOpen className="w-5 h-5 text-purple-500" />
           </div>
           <div>
             <div className="text-xs text-gray-400 font-medium uppercase tracking-wide">
               Classes
             </div>
-            <div className="text-3xl font-bold text-gray-800 leading-none mt-1">
+            <div className="text-2xl font-bold text-gray-800 leading-none mt-0.5">
               <AnimatedCounter target={24} />
             </div>
-            <div className="text-xs text-gray-400">Active</div>
+            <div className="flex items-center gap-0.5 mt-0.5">
+              <span className="text-xs text-gray-400 font-semibold">
+                No change
+              </span>
+            </div>
           </div>
         </motion.div>
 
@@ -823,19 +1121,76 @@ function AdminPanelContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.17 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 hover:shadow-md transition-shadow"
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1"
         >
-          <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-            <CreditCard className="w-6 h-6 text-amber-500" />
+          <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
+            <CreditCard className="w-5 h-5 text-amber-500" />
           </div>
           <div>
             <div className="text-xs text-gray-400 font-medium uppercase tracking-wide">
               Pending Fees
             </div>
-            <div className="text-3xl font-bold text-amber-600 leading-none mt-1">
+            <div className="text-2xl font-bold text-amber-600 leading-none mt-0.5">
               <AnimatedCounter target={18} />
             </div>
-            <div className="text-xs text-gray-400">Overdue</div>
+            <div className="flex items-center gap-0.5 mt-0.5">
+              <TrendingDown className="w-3 h-3 text-red-500" />
+              <span className="text-xs text-red-600 font-semibold">
+                -5 overdue
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Revenue This Month */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.21 }}
+          className="bg-white rounded-xl shadow-sm border border-emerald-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1"
+        >
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+            <TrendingUp className="w-5 h-5 text-emerald-600" />
+          </div>
+          <div>
+            <div className="text-xs text-gray-400 font-medium uppercase tracking-wide">
+              Revenue
+            </div>
+            <div className="text-xl font-bold text-emerald-700 leading-none mt-0.5">
+              ₹3.42L
+            </div>
+            <div className="flex items-center gap-0.5 mt-0.5">
+              <TrendingUp className="w-3 h-3 text-emerald-500" />
+              <span className="text-xs text-emerald-600 font-semibold">
+                +8% MoM
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* New Admissions */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.25 }}
+          className="bg-white rounded-xl shadow-sm border border-violet-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1"
+        >
+          <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
+            <UserPlus className="w-5 h-5 text-violet-600" />
+          </div>
+          <div>
+            <div className="text-xs text-gray-400 font-medium uppercase tracking-wide">
+              Admissions
+            </div>
+            <div className="text-2xl font-bold text-violet-700 leading-none mt-0.5">
+              <AnimatedCounter target={38} />
+            </div>
+            <div className="flex items-center gap-0.5 mt-0.5">
+              <TrendingUp className="w-3 h-3 text-violet-500" />
+              <span className="text-xs text-violet-600 font-semibold">
+                +12% this month
+              </span>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -849,8 +1204,19 @@ function AdminPanelContent({
         <RecentActivityPanel />
       </div>
 
-      {/* ── School Composition ── */}
-      <SchoolCompositionChart />
+      {/* ── Upcoming Events + Top Students ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-8">
+        <UpcomingEventsPanel />
+        <TopStudentsPanel />
+      </div>
+
+      {/* ── School Composition + Gender Distribution ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
+        <div className="lg:col-span-2">
+          <SchoolCompositionChart />
+        </div>
+        <GenderDistributionCard />
+      </div>
 
       {/* ── Info box ── */}
       <motion.div
@@ -1387,8 +1753,47 @@ function StudentPanel() {
 
 // ── Notification bell with badge ──────────────────────────────────────────────
 
+const NOTIFICATIONS = [
+  {
+    text: "New admission: Riya Patel – Grade 7",
+    time: "2 min ago",
+    dot: "bg-blue-400",
+    read: false,
+  },
+  {
+    text: "Fee payment received – Arjun Kumar ₹12,500",
+    time: "15 min ago",
+    dot: "bg-green-400",
+    read: false,
+  },
+  {
+    text: "Exam schedule published for Grade 10",
+    time: "1 hr ago",
+    dot: "bg-purple-400",
+    read: false,
+  },
+  {
+    text: "Transportation route update: North route delay",
+    time: "2 hrs ago",
+    dot: "bg-amber-400",
+    read: true,
+  },
+  {
+    text: "System settings updated by Super Admin",
+    time: "Yesterday",
+    dot: "bg-gray-400",
+    read: true,
+  },
+];
+
 function NotificationBell() {
   const [open, setOpen] = useState(false);
+  const [notifications, setNotifications] = useState(NOTIFICATIONS);
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  function markAllRead() {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  }
 
   return (
     <div className="relative">
@@ -1401,9 +1806,11 @@ function NotificationBell() {
         aria-label="Notifications"
       >
         <Bell className="w-5 h-5 text-white" />
-        <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
-          3
-        </span>
+        {unreadCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none">
+            {unreadCount}
+          </span>
+        )}
       </motion.button>
 
       <AnimatePresence>
@@ -1413,36 +1820,35 @@ function NotificationBell() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-10 w-72 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden"
+            className="absolute right-0 top-10 w-80 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden"
           >
-            <div className="px-4 py-3 border-b border-gray-100">
-              <span className="text-sm font-bold text-gray-800">
-                Notifications
-              </span>
-              <span className="ml-2 px-1.5 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded-full">
-                3
-              </span>
+            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-gray-800">
+                  Notifications
+                </span>
+                {unreadCount > 0 && (
+                  <span className="px-1.5 py-0.5 bg-red-100 text-red-600 text-xs font-bold rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
+              </div>
+              {unreadCount > 0 && (
+                <button
+                  type="button"
+                  data-ocid="dashboard.notification.mark_read.button"
+                  onClick={markAllRead}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  Mark all read
+                </button>
+              )}
             </div>
-            {[
-              {
-                text: "New admission: Riya Patel – Grade 7",
-                time: "2 min ago",
-                dot: "bg-blue-400",
-              },
-              {
-                text: "Fee payment received – Arjun Kumar ₹12,500",
-                time: "15 min ago",
-                dot: "bg-green-400",
-              },
-              {
-                text: "Exam schedule published for Grade 10",
-                time: "1 hr ago",
-                dot: "bg-purple-400",
-              },
-            ].map((n) => (
+            {notifications.map((n) => (
               <div
                 key={n.text}
-                className="px-4 py-3 hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-50 last:border-0 cursor-pointer"
+                className={`px-4 py-3 hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-50 last:border-0 cursor-pointer ${n.read ? "opacity-60" : ""}`}
               >
                 <span
                   className={`w-2 h-2 rounded-full ${n.dot} mt-1.5 flex-shrink-0`}
@@ -1453,6 +1859,9 @@ function NotificationBell() {
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">{n.time}</p>
                 </div>
+                {!n.read && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 flex-shrink-0" />
+                )}
               </div>
             ))}
           </motion.div>

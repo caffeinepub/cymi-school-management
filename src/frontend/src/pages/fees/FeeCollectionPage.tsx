@@ -32,6 +32,33 @@ import {
 } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useMemo, useRef, useState } from "react";
+
+// ─── AnimatedCounter (local) ──────────────────────────────────────────────────
+
+function AnimatedCounter({ target }: { target: number }) {
+  const [display, setDisplay] = useState(0);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    const start = performance.now();
+    const duration = 1000;
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - (1 - progress) ** 3;
+      setDisplay(Math.round(eased * target));
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [target]);
+
+  return <>{display}</>;
+}
 import { toast } from "sonner";
 import Sidebar from "../../components/Sidebar";
 import { FEE_STRUCTURES, FEE_STUDENTS } from "../../data/fees";
@@ -366,7 +393,8 @@ export default function FeeCollectionPage() {
             {[
               {
                 label: "Today's Collection",
-                value: "₹45,200",
+                numTarget: 45200,
+                prefix: "₹",
                 icon: <CreditCard className="w-5 h-5" />,
                 color: "text-blue-600",
                 bg: "bg-blue-50",
@@ -374,7 +402,8 @@ export default function FeeCollectionPage() {
               },
               {
                 label: "This Month",
-                value: "₹3,42,000",
+                numTarget: 342000,
+                prefix: "₹",
                 icon: <TrendingUp className="w-5 h-5" />,
                 color: "text-green-600",
                 bg: "bg-green-50",
@@ -382,7 +411,8 @@ export default function FeeCollectionPage() {
               },
               {
                 label: "Pending Students",
-                value: "87",
+                numTarget: 87,
+                prefix: "",
                 icon: <Users className="w-5 h-5" />,
                 color: "text-amber-600",
                 bg: "bg-amber-50",
@@ -390,7 +420,8 @@ export default function FeeCollectionPage() {
               },
               {
                 label: "Overdue",
-                value: "23",
+                numTarget: 23,
+                prefix: "",
                 icon: <AlertCircle className="w-5 h-5" />,
                 color: "text-red-600",
                 bg: "bg-red-50",
@@ -410,12 +441,50 @@ export default function FeeCollectionPage() {
                   <span className={s.color}>{s.icon}</span>
                 </div>
                 <div>
-                  <p className="text-xl font-bold text-gray-900">{s.value}</p>
+                  <p className={`text-xl font-bold ${s.color}`}>
+                    {s.prefix}
+                    <AnimatedCounter target={s.numTarget} />
+                  </p>
                   <p className="text-xs text-gray-500">{s.label}</p>
                 </div>
               </motion.div>
             ))}
           </div>
+
+          {/* Monthly Collection Target Progress */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.25 }}
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-4"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div>
+                <span className="text-xs font-semibold text-gray-700">
+                  Monthly Collection Target
+                </span>
+                <span className="text-xs text-gray-400 ml-2">
+                  Target: ₹5,00,000 | Collected: ₹3,42,000
+                </span>
+              </div>
+              <span className="text-sm font-bold text-emerald-700">68.4%</span>
+            </div>
+            <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
+              <motion.div
+                className="bg-emerald-500 h-3 rounded-full"
+                initial={{ width: "0%" }}
+                animate={{ width: "68.4%" }}
+                transition={{ duration: 1.2, delay: 0.3, ease: "easeOut" }}
+              />
+            </div>
+            <div className="flex justify-between mt-1">
+              <span className="text-xs text-gray-400">₹0</span>
+              <span className="text-xs text-gray-500 font-medium">
+                ₹3,42,000 collected of ₹5,00,000 target
+              </span>
+              <span className="text-xs text-gray-400">₹5L</span>
+            </div>
+          </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
             {/* Left: Student Search + Collection Form */}

@@ -7,6 +7,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { useNavigate } from "@tanstack/react-router";
 import {
@@ -17,6 +24,7 @@ import {
   Download,
   FileSpreadsheet,
   FileText,
+  Filter,
   Loader2,
   Search,
   TrendingUp,
@@ -57,6 +65,36 @@ function TimelineDot({ status }: { status: string }) {
   );
 }
 
+const MONTHS = [
+  "All",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+const MONTH_MAP: Record<string, string> = {
+  Jan: "-01-",
+  Feb: "-02-",
+  Mar: "-03-",
+  Apr: "-04-",
+  May: "-05-",
+  Jun: "-06-",
+  Jul: "-07-",
+  Aug: "-08-",
+  Sep: "-09-",
+  Oct: "-10-",
+  Nov: "-11-",
+  Dec: "-12-",
+};
+
 export default function FeeHistoryPage() {
   const navigate = useNavigate();
   const { data: profile, isLoading: profileLoading } = useCallerUserProfile();
@@ -67,6 +105,11 @@ export default function FeeHistoryPage() {
   const [selectedStudent, setSelectedStudent] = useState<
     (typeof FEE_STUDENTS)[0] | null
   >(null);
+
+  // Filters
+  const [filterYear, setFilterYear] = useState("All");
+  const [filterMonth, setFilterMonth] = useState("All");
+  const [filterStatus, setFilterStatus] = useState("All");
 
   useEffect(() => {
     if (!profileLoading && !profile) navigate({ to: "/login" });
@@ -93,8 +136,8 @@ export default function FeeHistoryPage() {
     setShowDropdown(false);
   }
 
-  // Get transactions for selected student
-  const studentTransactions = useMemo(() => {
+  // Get ALL transactions for selected student (unfiltered, for summary use)
+  const allStudentTransactions = useMemo(() => {
     if (!selectedStudent) return [];
     return FEE_TRANSACTIONS.filter(
       (t) => t.studentId === selectedStudent.id,
@@ -107,17 +150,59 @@ export default function FeeHistoryPage() {
     });
   }, [selectedStudent]);
 
+  // Apply filters
+  const studentTransactions = useMemo(() => {
+    let txns = allStudentTransactions;
+    if (filterYear !== "All") {
+      txns = txns.filter(
+        (t) =>
+          t.paymentDate?.startsWith(filterYear) || (!t.paymentDate && false),
+      );
+    }
+    if (filterMonth !== "All") {
+      const monthPart = MONTH_MAP[filterMonth] ?? "";
+      txns = txns.filter((t) => t.paymentDate?.includes(monthPart));
+    }
+    if (filterStatus !== "All") {
+      txns = txns.filter((t) => t.status === filterStatus);
+    }
+    return txns;
+  }, [allStudentTransactions, filterYear, filterMonth, filterStatus]);
+
   const summary = useMemo(() => {
     if (!selectedStudent) return null;
-    const totalAssessed = studentTransactions.reduce((s, t) => s + t.amount, 0);
-    const totalPaid = studentTransactions.reduce((s, t) => s + t.paidAmount, 0);
+    const totalAssessed = allStudentTransactions.reduce(
+      (s, t) => s + t.amount,
+      0,
+    );
+    const totalPaid = allStudentTransactions.reduce(
+      (s, t) => s + t.paidAmount,
+      0,
+    );
     const outstanding = totalAssessed - totalPaid;
-    const paidTxns = studentTransactions
+    const paidTxns = allStudentTransactions
       .filter((t) => t.paymentDate)
       .sort((a, b) => b.paymentDate.localeCompare(a.paymentDate));
     const lastPayment = paidTxns[0]?.paymentDate;
     return { totalAssessed, totalPaid, outstanding, lastPayment };
-  }, [selectedStudent, studentTransactions]);
+  }, [selectedStudent, allStudentTransactions]);
+
+  // Filtered summary (for visible rows)
+  const filteredSummary = useMemo(() => {
+    const totalPaid = studentTransactions
+      .filter((t) => t.status === "Paid")
+      .reduce((s, t) => s + t.paidAmount, 0);
+    const totalPending = studentTransactions
+      .filter(
+        (t) =>
+          t.status === "Pending" ||
+          t.status === "Partial" ||
+          t.status === "Overdue",
+      )
+      .reduce((s, t) => s + t.balance, 0);
+    const grandTotal = studentTransactions.reduce((s, t) => s + t.amount, 0);
+    return { totalPaid, totalPending, grandTotal };
+  }, [studentTransactions]);
 
   function handleExportExcel() {
     if (!studentTransactions.length) return;
@@ -482,9 +567,74 @@ export default function FeeHistoryPage() {
 
                   {/* Timeline */}
                   <div className="lg:col-span-2 bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                    <h3 className="font-semibold text-gray-800 mb-4">
-                      Payment Timeline
-                    </h3>
+                    <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+                      <h3 className="font-semibold text-gray-800">
+                        Payment Timeline
+                      </h3>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Filter className="w-3.5 h-3.5 text-gray-400" />
+                        <Select
+                          value={filterYear}
+                          onValueChange={setFilterYear}
+                        >
+                          <SelectTrigger
+                            data-ocid="fee-history.year.select"
+                            className="h-7 text-xs w-[80px]"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["All", "2024", "2025", "2026"].map((y) => (
+                              <SelectItem key={y} value={y}>
+                                {y}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={filterMonth}
+                          onValueChange={setFilterMonth}
+                        >
+                          <SelectTrigger
+                            data-ocid="fee-history.month.select"
+                            className="h-7 text-xs w-[80px]"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MONTHS.map((m) => (
+                              <SelectItem key={m} value={m}>
+                                {m}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select
+                          value={filterStatus}
+                          onValueChange={setFilterStatus}
+                        >
+                          <SelectTrigger
+                            data-ocid="fee-history.status.select"
+                            className="h-7 text-xs w-[90px]"
+                          >
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[
+                              "All",
+                              "Paid",
+                              "Pending",
+                              "Partial",
+                              "Overdue",
+                            ].map((s) => (
+                              <SelectItem key={s} value={s}>
+                                {s}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                     {studentTransactions.length === 0 ? (
                       <div
                         data-ocid="fee-history.empty_state"
@@ -492,83 +642,114 @@ export default function FeeHistoryPage() {
                       >
                         <CalendarClock className="w-10 h-10 mb-2 opacity-30" />
                         <p className="text-sm">
-                          No transactions found for this student
+                          No transactions match the selected filters
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-0 max-h-96 overflow-y-auto pr-2">
-                        {studentTransactions.map((t, i) => (
-                          <div
-                            key={t.id}
-                            data-ocid={`fee-history.item.${i + 1}`}
-                            className="flex gap-3 group"
-                          >
-                            {/* Timeline line */}
-                            <div className="flex flex-col items-center">
-                              <TimelineDot status={t.status} />
-                              {i < studentTransactions.length - 1 && (
-                                <div className="w-0.5 flex-1 bg-gray-100 my-1" />
-                              )}
-                            </div>
-                            {/* Content */}
-                            <div
-                              className={`flex-1 pb-3 ${i < studentTransactions.length - 1 ? "border-b border-gray-50" : ""}`}
-                            >
-                              <div className="flex items-start justify-between gap-2">
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <TimelineIcon status={t.status} />
-                                    <span className="text-sm font-semibold text-gray-800">
-                                      {t.feeHead}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center gap-3 mt-1">
-                                    <span className="text-xs text-gray-500 font-mono">
-                                      {t.receiptNo}
-                                    </span>
-                                    {t.paymentDate && (
-                                      <span className="text-xs text-gray-500">
-                                        {t.paymentDate}
-                                      </span>
-                                    )}
-                                    <span className="text-xs text-gray-500">
-                                      {t.paymentMethod}
-                                    </span>
-                                  </div>
-                                  {t.remarks && (
-                                    <p className="text-xs text-amber-600 mt-0.5 italic">
-                                      {t.remarks}
-                                    </p>
+                      <>
+                        <AnimatePresence>
+                          <div className="space-y-0 max-h-72 overflow-y-auto pr-2">
+                            {studentTransactions.map((t, i) => (
+                              <motion.div
+                                key={t.id}
+                                initial={{ opacity: 0, y: 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0 }}
+                                transition={{ duration: 0.2, delay: i * 0.03 }}
+                                data-ocid={`fee-history.item.${i + 1}`}
+                                className="flex gap-3 group"
+                              >
+                                {/* Timeline line */}
+                                <div className="flex flex-col items-center">
+                                  <TimelineDot status={t.status} />
+                                  {i < studentTransactions.length - 1 && (
+                                    <div className="w-0.5 flex-1 bg-gray-100 my-1" />
                                   )}
                                 </div>
-                                <div className="text-right flex-shrink-0">
-                                  <p className="text-sm font-bold text-gray-900">
-                                    {fmt(t.paidAmount)}
-                                  </p>
-                                  {t.balance > 0 && (
-                                    <p className="text-xs text-red-500">
-                                      Bal: {fmt(t.balance)}
-                                    </p>
-                                  )}
-                                  <Badge
-                                    className={`text-xs mt-1 ${
-                                      t.status === "Paid"
-                                        ? "bg-green-100 text-green-700"
-                                        : t.status === "Partial"
-                                          ? "bg-yellow-100 text-yellow-700"
-                                          : t.status === "Overdue"
-                                            ? "bg-red-100 text-red-700"
-                                            : "bg-blue-100 text-blue-700"
-                                    } hover:opacity-90`}
-                                  >
-                                    {t.status}
-                                  </Badge>
+                                {/* Content */}
+                                <div
+                                  className={`flex-1 pb-3 ${i < studentTransactions.length - 1 ? "border-b border-gray-50" : ""}`}
+                                >
+                                  <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                      <div className="flex items-center gap-2">
+                                        <TimelineIcon status={t.status} />
+                                        <span className="text-sm font-semibold text-gray-800">
+                                          {t.feeHead}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-3 mt-1">
+                                        <span className="text-xs text-gray-500 font-mono">
+                                          {t.receiptNo}
+                                        </span>
+                                        {t.paymentDate && (
+                                          <span className="text-xs text-gray-500">
+                                            {t.paymentDate}
+                                          </span>
+                                        )}
+                                        <span className="text-xs text-gray-500">
+                                          {t.paymentMethod}
+                                        </span>
+                                      </div>
+                                      {t.remarks && (
+                                        <p className="text-xs text-amber-600 mt-0.5 italic">
+                                          {t.remarks}
+                                        </p>
+                                      )}
+                                    </div>
+                                    <div className="text-right flex-shrink-0">
+                                      <p className="text-sm font-bold text-gray-900">
+                                        {fmt(t.paidAmount)}
+                                      </p>
+                                      {t.balance > 0 && (
+                                        <p className="text-xs text-red-500">
+                                          Bal: {fmt(t.balance)}
+                                        </p>
+                                      )}
+                                      <Badge
+                                        className={`text-xs mt-1 ${
+                                          t.status === "Paid"
+                                            ? "bg-green-100 text-green-700"
+                                            : t.status === "Partial"
+                                              ? "bg-yellow-100 text-yellow-700"
+                                              : t.status === "Overdue"
+                                                ? "bg-red-100 text-red-700"
+                                                : "bg-blue-100 text-blue-700"
+                                        } hover:opacity-90`}
+                                      >
+                                        {t.status}
+                                      </Badge>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
+                              </motion.div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
+                        </AnimatePresence>
+                        {/* Summary footer */}
+                        <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-3 gap-2 text-center">
+                          <div>
+                            <p className="text-xs text-gray-400">Total Paid</p>
+                            <p className="text-sm font-bold text-green-700">
+                              {fmt(filteredSummary.totalPaid)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">
+                              Total Pending
+                            </p>
+                            <p className="text-sm font-bold text-amber-700">
+                              {fmt(filteredSummary.totalPending)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-400">Grand Total</p>
+                            <p className="text-sm font-bold text-gray-800">
+                              {fmt(filteredSummary.grandTotal)}
+                            </p>
+                          </div>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>

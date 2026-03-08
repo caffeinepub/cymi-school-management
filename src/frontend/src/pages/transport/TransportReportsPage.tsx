@@ -98,6 +98,23 @@ function SummaryCard({
 
 const PIE_COLORS = ["#22c55e", "#f59e0b", "#ef4444"];
 
+const ROUTE_UTILIZATION_DATA = [
+  { route: "North", pct: 78 },
+  { route: "South", pct: 92 },
+  { route: "East", pct: 65 },
+  { route: "West", pct: 85 },
+  { route: "Central", pct: 70 },
+  { route: "Airport", pct: 58 },
+  { route: "Lake", pct: 81 },
+  { route: "Hill", pct: 72 },
+];
+
+function routeBarColor(pct: number) {
+  if (pct >= 80) return "#22c55e";
+  if (pct >= 60) return "#f59e0b";
+  return "#ef4444";
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function TransportReportsPage() {
@@ -345,6 +362,61 @@ export default function TransportReportsPage() {
         </motion.div>
 
         <div className="flex-1 overflow-auto px-6 py-4 space-y-5">
+          {/* Route Utilization Bar Chart */}
+          <motion.div
+            data-ocid="transport-reports.utilization_chart.panel"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.04 }}
+            className="bg-white rounded-xl border border-gray-100 shadow-sm p-5"
+          >
+            <div className="mb-4">
+              <h3 className="text-sm font-semibold text-gray-700">
+                Route Utilization
+              </h3>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Capacity usage per route —{" "}
+                <span className="text-green-600 font-medium">Green ≥80%</span>,{" "}
+                <span className="text-amber-600 font-medium">Amber 60–79%</span>
+                , <span className="text-red-600 font-medium">Red &lt;60%</span>
+              </p>
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart
+                data={ROUTE_UTILIZATION_DATA}
+                margin={{ left: -10, right: 10, top: 5, bottom: 5 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="route"
+                  tick={{ fontSize: 11, fill: "#9ca3af" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  domain={[0, 100]}
+                  tick={{ fontSize: 10, fill: "#9ca3af" }}
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={(v) => `${v}%`}
+                />
+                <Tooltip
+                  formatter={(v: number) => [`${v}%`, "Utilization"]}
+                  contentStyle={{
+                    borderRadius: 8,
+                    border: "1px solid #e5e7eb",
+                    fontSize: 12,
+                  }}
+                />
+                <Bar dataKey="pct" radius={[4, 4, 0, 0]} maxBarSize={48}>
+                  {ROUTE_UTILIZATION_DATA.map((entry) => (
+                    <Cell key={entry.route} fill={routeBarColor(entry.pct)} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </motion.div>
+
           {/* Summary Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <SummaryCard

@@ -5,7 +5,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import {
   BarChart2,
   BookOpen,
@@ -24,7 +24,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -219,7 +219,31 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
   const [expanded, setExpanded] = useState(true);
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
 
+  const routerState = useRouterState();
+  const currentPath = routerState.location.pathname;
+
   const menuItems = getMenuItems(role);
+
+  // Auto-open group if a child route is active
+  // biome-ignore lint/correctness/useExhaustiveDependencies: menuItems is stable (derived from role); re-running on currentPath is intentional
+  useEffect(() => {
+    for (const item of menuItems) {
+      if (item.children) {
+        const hasActive = item.children.some(
+          (child) =>
+            child.href && currentPath.startsWith(child.href.split("?")[0]),
+        );
+        if (hasActive) {
+          setOpenGroups((prev) => {
+            if (prev.has(item.label)) return prev;
+            const next = new Set(prev);
+            next.add(item.label);
+            return next;
+          });
+        }
+      }
+    }
+  }, [currentPath]);
 
   const toggleGroup = useCallback((label: string) => {
     setOpenGroups((prev) => {
@@ -232,6 +256,17 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
       return next;
     });
   }, []);
+
+  function isLeafActive(href: string | undefined) {
+    if (!href) return false;
+    const cleanHref = href.split("?")[0];
+    return currentPath === cleanHref || currentPath.startsWith(`${cleanHref}/`);
+  }
+
+  function isGroupActive(children: NavChild[] | undefined) {
+    if (!children) return false;
+    return children.some((c) => c.href && isLeafActive(c.href));
+  }
 
   const initials = userName
     .split(" ")
@@ -289,6 +324,7 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
             {menuItems.map((item) => {
               const hasChildren = item.children && item.children.length > 0;
               const isOpen = openGroups.has(item.label);
+              const groupActive = isGroupActive(item.children);
 
               if (hasChildren) {
                 return (
@@ -299,13 +335,17 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                         type="button"
                         data-ocid={item.groupOcid}
                         onClick={() => toggleGroup(item.label)}
-                        className="sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left"
+                        className={`sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left ${groupActive ? "bg-white/10 border-l-2 border-white/50" : ""}`}
                         aria-expanded={isOpen}
                       >
-                        <span className="flex-shrink-0 text-white/70">
+                        <span
+                          className={`flex-shrink-0 ${groupActive ? "text-white" : "text-white/70"}`}
+                        >
                           {item.icon}
                         </span>
-                        <span className="flex-1 text-sm font-medium text-white/90 truncate">
+                        <span
+                          className={`flex-1 text-sm truncate ${groupActive ? "text-white font-semibold" : "font-medium text-white/90"}`}
+                        >
                           {item.label}
                         </span>
                         <span
@@ -329,10 +369,16 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                               setExpanded(true);
                               toggleGroup(item.label);
                             }}
-                            className="sidebar-item w-full flex items-center justify-center px-3 py-2.5 rounded-md"
+                            className={`sidebar-item w-full flex items-center justify-center px-3 py-2.5 rounded-md ${groupActive ? "bg-white/15" : ""}`}
                             aria-label={item.label}
                           >
-                            <span className="text-white/70">{item.icon}</span>
+                            <span
+                              className={
+                                groupActive ? "text-white" : "text-white/70"
+                              }
+                            >
+                              {item.icon}
+                            </span>
                           </button>
                         </TooltipTrigger>
                         <TooltipContent
@@ -357,15 +403,18 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                         }}
                       >
                         <div className="ml-4 pl-3 border-l border-white/10 mt-0.5 mb-1">
-                          {item.children!.map((child) => (
-                            <Link
-                              key={child.label}
-                              to={child.href ?? "/dashboard"}
-                              className="sidebar-child-item flex items-center py-2 px-3 rounded-md text-sm"
-                            >
-                              {child.label}
-                            </Link>
-                          ))}
+                          {item.children!.map((child) => {
+                            const childActive = isLeafActive(child.href);
+                            return (
+                              <Link
+                                key={child.label}
+                                to={child.href ?? "/dashboard"}
+                                className={`sidebar-child-item flex items-center py-2 px-3 rounded-md text-sm ${childActive ? "bg-white/20 text-white font-semibold" : ""}`}
+                              >
+                                {child.label}
+                              </Link>
+                            );
+                          })}
                         </div>
                       </div>
                     )}
@@ -373,18 +422,24 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                 );
               }
 
+              const leafActive = isLeafActive(item.href);
+
               // Leaf item
               return expanded ? (
                 <Link
                   key={item.label}
                   to={item.href ?? "/dashboard"}
                   data-ocid={item.ocid}
-                  className="sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-md"
+                  className={`sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-md ${leafActive ? "bg-white/15 text-white font-semibold" : ""}`}
                 >
-                  <span className="flex-shrink-0 text-white/70">
+                  <span
+                    className={`flex-shrink-0 ${leafActive ? "text-white" : "text-white/70"}`}
+                  >
                     {item.icon}
                   </span>
-                  <span className="text-sm font-medium text-white/90 truncate">
+                  <span
+                    className={`text-sm truncate ${leafActive ? "text-white font-semibold" : "font-medium text-white/90"}`}
+                  >
                     {item.label}
                   </span>
                 </Link>
@@ -394,10 +449,14 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                     <Link
                       to={item.href ?? "/dashboard"}
                       data-ocid={item.ocid}
-                      className="sidebar-item flex items-center justify-center px-3 py-2.5 rounded-md"
+                      className={`sidebar-item flex items-center justify-center px-3 py-2.5 rounded-md ${leafActive ? "bg-white/15" : ""}`}
                       aria-label={item.label}
                     >
-                      <span className="text-white/70">{item.icon}</span>
+                      <span
+                        className={leafActive ? "text-white" : "text-white/70"}
+                      >
+                        {item.icon}
+                      </span>
                     </Link>
                   </TooltipTrigger>
                   <TooltipContent side="right" className="sidebar-tooltip">

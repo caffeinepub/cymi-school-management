@@ -33,6 +33,32 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+
+// ── New chart data ────────────────────────────────────────────────────────────
+
+const GRADE_ENROLLMENT_DATA = [
+  { grade: "Gr 1", students: 48 },
+  { grade: "Gr 2", students: 45 },
+  { grade: "Gr 3", students: 50 },
+  { grade: "Gr 4", students: 42 },
+  { grade: "Gr 5", students: 44 },
+  { grade: "Gr 6", students: 41 },
+  { grade: "Gr 7", students: 38 },
+  { grade: "Gr 8", students: 40 },
+  { grade: "Gr 9", students: 43 },
+  { grade: "Gr 10", students: 47 },
+  { grade: "Gr 11", students: 44 },
+  { grade: "Gr 12", students: 38 },
+];
+
+const FEE_TARGET_DATA = [
+  { month: "Jan", target: 300000, actual: 240000 },
+  { month: "Feb", target: 300000, actual: 185000 },
+  { month: "Mar", target: 300000, actual: 320000 },
+  { month: "Apr", target: 300000, actual: 290000 },
+  { month: "May", target: 300000, actual: 210000 },
+  { month: "Jun", target: 300000, actual: 350000 },
+];
 import { toast } from "sonner";
 import Sidebar from "../components/Sidebar";
 import { useCallerUserProfile, useLogout } from "../hooks/useQueries";
@@ -585,6 +611,131 @@ export default function ReportsPage() {
                 </AreaChart>
               </ResponsiveContainer>
             </motion.div>
+
+            {/* ── NEW: Grade-wise Enrollment + Fee vs Target ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5">
+              {/* Grade-wise Enrollment Bar */}
+              <motion.div
+                data-ocid="reports.grade_enrollment_chart.panel"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.28 }}
+                className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
+              >
+                <div className="mb-4">
+                  <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    Grade-wise Enrollment
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Students per grade
+                  </p>
+                </div>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart
+                    data={GRADE_ENROLLMENT_DATA}
+                    margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="grade"
+                      tick={{ fontSize: 10, fill: "#9ca3af" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "#9ca3af" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      formatter={(v: number) => [v, "Students"]}
+                      contentStyle={{
+                        borderRadius: 8,
+                        border: "1px solid #e5e7eb",
+                        fontSize: 12,
+                      }}
+                    />
+                    <Bar
+                      dataKey="students"
+                      fill="#8b5cf6"
+                      radius={[4, 4, 0, 0]}
+                      maxBarSize={32}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </motion.div>
+
+              {/* Fee Collection vs Target */}
+              <motion.div
+                data-ocid="reports.fee_target_chart.panel"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: 0.32 }}
+                className="bg-white rounded-xl shadow-sm border border-gray-100 p-6"
+              >
+                <div className="mb-4">
+                  <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide">
+                    Fee Collection vs Target
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    Jan–Jun 2026 (₹)
+                  </p>
+                </div>
+                <ResponsiveContainer width="100%" height={220}>
+                  <BarChart
+                    data={FEE_TARGET_DATA}
+                    margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis
+                      dataKey="month"
+                      tick={{ fontSize: 11, fill: "#9ca3af" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "#9ca3af" }}
+                      axisLine={false}
+                      tickLine={false}
+                      tickFormatter={(v) =>
+                        v >= 1000 ? `₹${(v / 1000).toFixed(0)}k` : `₹${v}`
+                      }
+                      width={44}
+                    />
+                    <Tooltip
+                      formatter={(v: number, name: string) => [
+                        `₹${v.toLocaleString("en-IN")}`,
+                        name === "target" ? "Target" : "Actual",
+                      ]}
+                      contentStyle={{
+                        borderRadius: 8,
+                        border: "1px solid #e5e7eb",
+                        fontSize: 12,
+                      }}
+                    />
+                    <Legend
+                      iconType="circle"
+                      iconSize={8}
+                      wrapperStyle={{ fontSize: 11 }}
+                    />
+                    <Bar
+                      dataKey="target"
+                      fill="#e5e7eb"
+                      radius={[4, 4, 0, 0]}
+                      name="Target"
+                      maxBarSize={24}
+                    />
+                    <Bar
+                      dataKey="actual"
+                      fill="#10B981"
+                      radius={[4, 4, 0, 0]}
+                      name="Actual"
+                      maxBarSize={24}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </motion.div>
+            </div>
 
             {/* ── Enrollment Pie Chart ── */}
             <motion.div
