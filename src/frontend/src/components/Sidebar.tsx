@@ -103,7 +103,6 @@ function getMenuItems(role: string): NavItem[] {
         children: [
           { label: "All Students", href: "/students" },
           { label: "Add Student", href: "/students?action=add" },
-          { label: "Attendance", href: "/attendance" },
         ],
       },
       {

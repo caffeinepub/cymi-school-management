@@ -1,11 +1,29 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -15,18 +33,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import {
   ArrowLeft,
   BookOpen,
   Briefcase,
   CalendarCheck,
+  ClipboardCheck,
   Download,
   FileText,
   Loader2,
   Mail,
   MapPin,
   Phone,
+  Plus,
   User,
 } from "lucide-react";
 import { motion } from "motion/react";
@@ -35,11 +56,17 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  PolarAngleAxis,
+  PolarGrid,
+  PolarRadiusAxis,
+  Radar,
+  RadarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import { toast } from "sonner";
 import Sidebar from "../../components/Sidebar";
 import { TEACHERS, type Teacher } from "../../data/teachers";
 import { useCallerUserProfile, useLogout } from "../../hooks/useQueries";
@@ -156,11 +183,10 @@ function getMonthlyAttendance(seed: number) {
     "Apr",
     "May",
   ];
-  // Simple seeded pseudo-random
   let s = seed;
   function rng() {
     s = (s * 1664525 + 1013904223) & 0xffffffff;
-    return ((s >>> 0) / 0xffffffff) * 0.25 + 0.72; // 72–97%
+    return ((s >>> 0) / 0xffffffff) * 0.25 + 0.72;
   }
   return months.map((month) => {
     const workingDays = 25;
@@ -195,7 +221,6 @@ function generateTimetable(
 
   for (const day of DAYS) {
     timetable[day] = {};
-    // Each teacher teaches 3-5 periods per day
     const periodsToFill = 3 + (seed % 3);
     seed = (seed * 7 + 13) % 100;
 
@@ -212,6 +237,546 @@ function generateTimetable(
     }
   }
   return timetable;
+}
+
+// ─── Assessment helpers ───────────────────────────────────────────────────────
+
+const ASSESSMENT_CATEGORIES = [
+  { key: "teachingQuality", label: "Teaching Quality", prime: 37, offset: 62 },
+  {
+    key: "studentEngagement",
+    label: "Student Engagement",
+    prime: 41,
+    offset: 58,
+  },
+  {
+    key: "punctuality",
+    label: "Punctuality & Discipline",
+    prime: 43,
+    offset: 65,
+  },
+  {
+    key: "communication",
+    label: "Communication Skills",
+    prime: 47,
+    offset: 60,
+  },
+  {
+    key: "subjectKnowledge",
+    label: "Subject Knowledge",
+    prime: 53,
+    offset: 68,
+  },
+  {
+    key: "adminCompliance",
+    label: "Administrative Compliance",
+    prime: 59,
+    offset: 55,
+  },
+];
+
+function getAssessmentScores(teacherId: number): Record<string, number> {
+  const scores: Record<string, number> = {};
+  for (const { key, prime, offset } of ASSESSMENT_CATEGORIES) {
+    scores[key] = ((teacherId * prime + offset) % 35) + 60;
+  }
+  return scores;
+}
+
+function getOverallScore(scores: Record<string, number>): number {
+  const vals = Object.values(scores);
+  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+}
+
+function getGrade(score: number): string {
+  if (score >= 90) return "A+";
+  if (score >= 80) return "A";
+  if (score >= 70) return "B";
+  if (score >= 60) return "C";
+  return "D";
+}
+
+function getScoreColor(score: number): string {
+  if (score >= 80) return "text-green-700";
+  if (score >= 60) return "text-amber-700";
+  return "text-red-600";
+}
+
+function getProgressColor(score: number): string {
+  if (score >= 80) return "bg-green-500";
+  if (score >= 60) return "bg-amber-500";
+  return "bg-red-500";
+}
+
+const ASSESSORS = [
+  "Dr. Rajesh Kumar",
+  "Mrs. Sunita Sharma",
+  "Mr. Anil Mehta",
+  "Dr. Priya Nair",
+  "Mr. Suresh Pillai",
+  "Mrs. Kavita Singh",
+];
+
+const TERMS = ["Term 1", "Term 2", "Term 3"];
+const ACADEMIC_YEARS = ["2021-22", "2022-23", "2023-24", "2024-25"];
+const REMARKS_POOL = [
+  "Excellent performance. Highly recommended for senior roles.",
+  "Good overall performance. Minor improvements needed in student engagement.",
+  "Consistent and reliable. Meets all expectations.",
+  "Above average in subject knowledge. Communication skills improving.",
+  "Outstanding classroom management and student rapport.",
+  "Satisfactory performance. Recommended for professional development training.",
+];
+
+function getAssessmentHistory(teacherId: number) {
+  const rows: {
+    term: string;
+    year: string;
+    assessor: string;
+    score: number;
+    grade: string;
+    remarks: string;
+  }[] = [];
+  for (let i = 0; i < 5; i++) {
+    const seed = teacherId * 13 + i * 77;
+    const score = ((seed * 37 + 61) % 35) + 62;
+    const termIdx = (seed * 3 + i) % 3;
+    const yearIdx = (seed + i) % 4;
+    const assessorIdx = (seed * 7 + i * 11) % ASSESSORS.length;
+    const remarkIdx = (seed * 5 + i * 13) % REMARKS_POOL.length;
+    rows.push({
+      term: TERMS[termIdx],
+      year: ACADEMIC_YEARS[yearIdx],
+      assessor: ASSESSORS[assessorIdx],
+      score,
+      grade: getGrade(score),
+      remarks: REMARKS_POOL[remarkIdx],
+    });
+  }
+  return rows;
+}
+
+// ─── Assessment Score Ring ────────────────────────────────────────────────────
+
+function ScoreRing({ score }: { score: number }) {
+  const radius = 56;
+  const circ = 2 * Math.PI * radius;
+  const [offset, setOffset] = useState(circ);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setOffset(circ * (1 - score / 100));
+    }, 150);
+    return () => clearTimeout(t);
+  }, [score, circ]);
+
+  const strokeColor =
+    score >= 80 ? "#10B981" : score >= 60 ? "#F59E0B" : "#EF4444";
+  const bgColor = score >= 80 ? "#D1FAE5" : score >= 60 ? "#FEF3C7" : "#FEE2E2";
+
+  return (
+    <div
+      className="relative w-36 h-36 flex items-center justify-center"
+      style={{ background: bgColor, borderRadius: "50%" }}
+    >
+      <svg
+        width="144"
+        height="144"
+        viewBox="0 0 144 144"
+        className="absolute inset-0 -rotate-90"
+        aria-hidden="true"
+      >
+        <circle
+          cx={72}
+          cy={72}
+          r={radius}
+          fill="none"
+          stroke="#e5e7eb"
+          strokeWidth={10}
+        />
+        <circle
+          cx={72}
+          cy={72}
+          r={radius}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth={10}
+          strokeLinecap="round"
+          strokeDasharray={circ}
+          strokeDashoffset={offset}
+          style={{ transition: "stroke-dashoffset 1.2s ease-out" }}
+        />
+      </svg>
+      <div className="relative flex flex-col items-center justify-center">
+        <span className="text-3xl font-bold" style={{ color: strokeColor }}>
+          {score}
+        </span>
+        <span className="text-xs font-semibold text-gray-500">out of 100</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Assessment Tab ───────────────────────────────────────────────────────────
+
+function AssessmentTab({
+  teacher,
+  role,
+}: {
+  teacher: Teacher;
+  role: string;
+}) {
+  const scores = getAssessmentScores(teacher.id);
+  const overall = getOverallScore(scores);
+  const history = getAssessmentHistory(teacher.id);
+  const radarData = ASSESSMENT_CATEGORIES.map(({ key, label }) => ({
+    subject: `${label.split(" ")[0]}${label.includes("&") ? ` & ${label.split(" & ")[1]?.split(" ")[0]}` : ""}`,
+
+    score: scores[key],
+    fullMark: 100,
+  }));
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState({
+    term: "",
+    year: "",
+    assessor: "",
+    score: "",
+    remarks: "",
+  });
+  const [submitting, setSubmitting] = useState(false);
+
+  const canAddAssessment = role === "SuperAdmin" || role === "Admin";
+
+  function handleSubmit() {
+    if (!form.term || !form.year || !form.assessor || !form.score) {
+      toast.error("Please fill in all required fields.");
+      return;
+    }
+    setSubmitting(true);
+    setTimeout(() => {
+      setSubmitting(false);
+      setDialogOpen(false);
+      setForm({ term: "", year: "", assessor: "", score: "", remarks: "" });
+      toast.success(
+        `Assessment recorded successfully for ${teacher.firstName} ${teacher.lastName}!`,
+      );
+    }, 800);
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Overall Score */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+            Overall Performance Score
+          </h3>
+          {canAddAssessment && (
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  data-ocid="assessment.open_modal_button"
+                  size="sm"
+                  className="gap-1.5 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Assessment
+                </Button>
+              </DialogTrigger>
+              <DialogContent
+                data-ocid="assessment.dialog"
+                className="sm:max-w-md"
+              >
+                <DialogHeader>
+                  <DialogTitle className="text-gray-900">
+                    Add Assessment — {teacher.firstName} {teacher.lastName}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                        Term *
+                      </Label>
+                      <Select
+                        value={form.term}
+                        onValueChange={(v) =>
+                          setForm((p) => ({ ...p, term: v }))
+                        }
+                      >
+                        <SelectTrigger
+                          data-ocid="assessment.select"
+                          className="text-sm"
+                        >
+                          <SelectValue placeholder="Select term" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {TERMS.map((t) => (
+                            <SelectItem key={t} value={t}>
+                              {t}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                        Academic Year *
+                      </Label>
+                      <Input
+                        data-ocid="assessment.input"
+                        placeholder="e.g. 2024-25"
+                        value={form.year}
+                        onChange={(e) =>
+                          setForm((p) => ({ ...p, year: e.target.value }))
+                        }
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                      Assessor Name *
+                    </Label>
+                    <Input
+                      data-ocid="assessment.input"
+                      placeholder="Enter assessor name"
+                      value={form.assessor}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, assessor: e.target.value }))
+                      }
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                      Score (0–100) *
+                    </Label>
+                    <Input
+                      data-ocid="assessment.input"
+                      type="number"
+                      min={0}
+                      max={100}
+                      placeholder="Enter score"
+                      value={form.score}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, score: e.target.value }))
+                      }
+                      className="text-sm"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                      Remarks
+                    </Label>
+                    <Textarea
+                      data-ocid="assessment.textarea"
+                      placeholder="Enter assessment remarks..."
+                      value={form.remarks}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, remarks: e.target.value }))
+                      }
+                      className="text-sm resize-none"
+                      rows={3}
+                    />
+                  </div>
+                </div>
+                <DialogFooter className="gap-2">
+                  <Button
+                    data-ocid="assessment.cancel_button"
+                    variant="outline"
+                    onClick={() => setDialogOpen(false)}
+                    disabled={submitting}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    data-ocid="assessment.submit_button"
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Assessment"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-8">
+          <div className="flex flex-col items-center gap-3">
+            <ScoreRing score={overall} />
+            <div className="text-center">
+              <span className={`text-lg font-bold ${getScoreColor(overall)}`}>
+                Grade: {getGrade(overall)}
+              </span>
+              <p className="text-xs text-gray-400 mt-0.5">
+                {overall >= 80
+                  ? "Excellent Performance"
+                  : overall >= 60
+                    ? "Good Performance"
+                    : "Needs Improvement"}
+              </p>
+            </div>
+          </div>
+
+          {/* Category summary */}
+          <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+            {ASSESSMENT_CATEGORIES.map(({ key, label }) => (
+              <div key={key} className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-gray-600">
+                    {label}
+                  </span>
+                  <span
+                    className={`text-xs font-bold ${getScoreColor(scores[key])}`}
+                  >
+                    {scores[key]}/100
+                  </span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <motion.div
+                    className={`h-full rounded-full ${getProgressColor(scores[key])}`}
+                    initial={{ width: 0 }}
+                    animate={{ width: `${scores[key]}%` }}
+                    transition={{ duration: 0.9, delay: 0.15, ease: "easeOut" }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Radar Chart */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
+          Performance Radar
+        </h3>
+        <ResponsiveContainer width="100%" height={280}>
+          <RadarChart
+            data={radarData}
+            margin={{ top: 10, right: 30, bottom: 10, left: 30 }}
+          >
+            <PolarGrid stroke="#e5e7eb" />
+            <PolarAngleAxis
+              dataKey="subject"
+              tick={{ fontSize: 11, fill: "#6b7280", fontWeight: 500 }}
+            />
+            <PolarRadiusAxis
+              angle={30}
+              domain={[0, 100]}
+              tick={{ fontSize: 10, fill: "#9ca3af" }}
+              tickCount={5}
+            />
+            <Radar
+              name="Score"
+              dataKey="score"
+              stroke="#3B82F6"
+              fill="#3B82F6"
+              fillOpacity={0.18}
+              strokeWidth={2}
+              dot={{ r: 3, fill: "#3B82F6" }}
+            />
+            <Tooltip
+              formatter={(v: number) => [`${v}/100`, "Score"]}
+              contentStyle={{
+                borderRadius: 8,
+                border: "1px solid #e5e7eb",
+                fontSize: 12,
+              }}
+            />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Assessment History */}
+      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="px-5 py-4 border-b border-gray-100 bg-gray-50/60">
+          <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+            Assessment History
+          </h3>
+        </div>
+        <Table data-ocid="assessment.table">
+          <TableHeader>
+            <TableRow className="bg-gray-50/40">
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Term
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Academic Year
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Assessor
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Score
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Grade
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Remarks
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {history.map((row, idx) => (
+              <TableRow
+                key={`${row.term}-${row.year}-${idx}`}
+                data-ocid={`assessment.row.${idx + 1}`}
+                className="border-b border-gray-50 last:border-0"
+              >
+                <TableCell className="text-sm font-medium text-gray-800 py-3">
+                  {row.term}
+                </TableCell>
+                <TableCell className="text-sm text-gray-600 py-3">
+                  {row.year}
+                </TableCell>
+                <TableCell className="text-sm text-gray-700 py-3">
+                  {row.assessor}
+                </TableCell>
+                <TableCell className="py-3">
+                  <span
+                    className={`text-sm font-bold ${getScoreColor(row.score)}`}
+                  >
+                    {row.score}
+                  </span>
+                </TableCell>
+                <TableCell className="py-3">
+                  <Badge
+                    className={
+                      row.grade.startsWith("A")
+                        ? "bg-green-100 text-green-700 border border-green-200 hover:bg-green-100"
+                        : row.grade === "B"
+                          ? "bg-blue-100 text-blue-700 border border-blue-200 hover:bg-blue-100"
+                          : row.grade === "C"
+                            ? "bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-100"
+                            : "bg-red-100 text-red-700 border border-red-200 hover:bg-red-100"
+                    }
+                  >
+                    {row.grade}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-xs text-gray-500 py-3 max-w-[220px]">
+                  <span className="line-clamp-2">{row.remarks}</span>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
 }
 
 // ─── Personal Details Tab ─────────────────────────────────────────────────────
@@ -568,7 +1133,6 @@ export default function TeacherProfilePage() {
   const { data: profile, isLoading: profileLoading } = useCallerUserProfile();
   const logoutMutation = useLogout();
 
-  // Auth redirect
   useEffect(() => {
     if (!profileLoading && !profile) {
       navigate({ to: "/login" });
@@ -603,7 +1167,6 @@ export default function TeacherProfilePage() {
     (t) => t.id === Number(id),
   );
 
-  // ── Export PDF ──
   function handleExportPDF() {
     if (!teacher) return;
     const columns = ["Field", "Value"];
@@ -693,7 +1256,6 @@ export default function TeacherProfilePage() {
           className="bg-white border-b border-gray-100 px-6 py-4 flex-shrink-0"
         >
           <div className="flex items-center gap-4">
-            {/* Back button */}
             <Button
               data-ocid="teacher-profile.secondary_button"
               variant="outline"
@@ -705,7 +1267,6 @@ export default function TeacherProfilePage() {
               Back to Teachers
             </Button>
 
-            {/* Export dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -730,7 +1291,6 @@ export default function TeacherProfilePage() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Avatar + name */}
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <div
                 className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-sm shadow-sm ${deptColor}`}
@@ -768,9 +1328,7 @@ export default function TeacherProfilePage() {
           >
             {/* ─── Left: Profile card ─── */}
             <div className="lg:col-span-1 space-y-4">
-              {/* Profile card */}
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
-                {/* Avatar */}
                 <div className="flex flex-col items-center text-center mb-5">
                   <div
                     className={`w-20 h-20 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md mb-3 ${deptColor}`}
@@ -788,7 +1346,6 @@ export default function TeacherProfilePage() {
                   </div>
                 </div>
 
-                {/* Chips */}
                 <div className="flex flex-wrap gap-1.5 justify-center mb-4">
                   <Badge
                     variant="outline"
@@ -804,7 +1361,6 @@ export default function TeacherProfilePage() {
                   </Badge>
                 </div>
 
-                {/* Quick stats */}
                 <div className="grid grid-cols-3 gap-3 mb-4 pt-4 border-t border-gray-100">
                   {[
                     {
@@ -833,7 +1389,6 @@ export default function TeacherProfilePage() {
                   ))}
                 </div>
 
-                {/* Contact info */}
                 <div className="space-y-2.5 pt-4 border-t border-gray-100">
                   <div className="flex items-center gap-2 text-sm text-gray-700">
                     <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
@@ -897,6 +1452,14 @@ export default function TeacherProfilePage() {
                     <BookOpen className="w-4 h-4" />
                     Timetable
                   </TabsTrigger>
+                  <TabsTrigger
+                    data-ocid="teacher-profile.tab"
+                    value="assessment"
+                    className="gap-1.5 rounded-lg data-[state=active]:bg-blue-600 data-[state=active]:text-white"
+                  >
+                    <ClipboardCheck className="w-4 h-4" />
+                    Assessment
+                  </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="personal">
@@ -913,6 +1476,10 @@ export default function TeacherProfilePage() {
 
                 <TabsContent value="timetable">
                   <TimetableTab teacher={teacher} />
+                </TabsContent>
+
+                <TabsContent value="assessment">
+                  <AssessmentTab teacher={teacher} role={String(role)} />
                 </TabsContent>
               </Tabs>
             </div>
