@@ -112,7 +112,7 @@ function getMenuItems(role: string): NavItem[] {
         children: [
           { label: "Timetable", href: "/dashboard" },
           { label: "Exams", href: "/dashboard" },
-          { label: "Results", href: "/dashboard" },
+          { label: "Results", href: "/exam/results" },
         ],
       },
       {
@@ -126,9 +126,9 @@ function getMenuItems(role: string): NavItem[] {
         icon: <BookOpenCheck className="w-5 h-5" />,
         groupOcid: "sidebar.exam_group_toggle",
         children: [
-          { label: "Exam Schedule", href: "/dashboard" },
-          { label: "Hall Tickets", href: "/dashboard" },
-          { label: "Results", href: "/dashboard" },
+          { label: "Exam Schedule", href: "/exam/schedule" },
+          { label: "Hall Tickets", href: "/exam/hall-tickets" },
+          { label: "Results", href: "/exam/results" },
         ],
       },
       {
