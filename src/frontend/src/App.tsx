@@ -17,6 +17,9 @@ import StudentsPage from "./pages/StudentsPage";
 import SuperAdminControlPage from "./pages/SuperAdminControlPage";
 import SystemSettingsPage from "./pages/SystemSettingsPage";
 import UserManagementPage from "./pages/UserManagementPage";
+import AdmissionReportsPage from "./pages/admissions/AdmissionReportsPage";
+import AllAdmissionsPage from "./pages/admissions/AllAdmissionsPage";
+import NewAdmissionPage from "./pages/admissions/NewAdmissionPage";
 import ExamSchedulePage from "./pages/exam/ExamSchedulePage";
 import HallTicketsPage from "./pages/exam/HallTicketsPage";
 import ResultsPage from "./pages/exam/ResultsPage";
@@ -25,7 +28,10 @@ import FeeHistoryPage from "./pages/fees/FeeHistoryPage";
 import FeeReceiptsPage from "./pages/fees/FeeReceiptsPage";
 import FeeRegisterPage from "./pages/fees/FeeRegisterPage";
 import FeeReportsPage from "./pages/fees/FeeReportsPage";
+import FeeSettingsPage from "./pages/fees/FeeSettingsPage";
 import FeeStructurePage from "./pages/fees/FeeStructurePage";
+import SmsComposePage from "./pages/sms/SmsComposePage";
+import SmsHistoryPage from "./pages/sms/SmsHistoryPage";
 import TeacherProfilePage from "./pages/staff/TeacherProfilePage";
 import TeachersPage from "./pages/staff/TeachersPage";
 import TransportAssignmentsPage from "./pages/transport/TransportAssignmentsPage";
@@ -123,6 +129,11 @@ const feeStructureRoute = createRoute({
   path: "/fees/structure",
   component: FeeStructurePage,
 });
+const feeSettingsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/fees/settings",
+  component: FeeSettingsPage,
+});
 const feeCollectionRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/fees/collection",
@@ -163,8 +174,6 @@ const teacherProfileRoute = createRoute({
   path: "/teachers/$id",
   component: TeacherProfilePage,
 });
-
-// Exam Management routes
 const examScheduleRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/exam/schedule",
@@ -179,6 +188,35 @@ const resultsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/exam/results",
   component: ResultsPage,
+});
+
+// SMS routes
+const smsComposeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/sms/compose",
+  component: SmsComposePage,
+});
+const smsHistoryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/sms/history",
+  component: SmsHistoryPage,
+});
+
+// Admissions routes
+const admissionsAllRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admissions/all",
+  component: AllAdmissionsPage,
+});
+const admissionsNewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admissions/new",
+  component: NewAdmissionPage,
+});
+const admissionsReportsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/admissions/reports",
+  component: AdmissionReportsPage,
 });
 
 const catchAllRoute = createRoute({
@@ -204,6 +242,7 @@ const routeTree = rootRoute.addChildren([
   transportAssignmentsRoute,
   transportReportsRoute,
   feeStructureRoute,
+  feeSettingsRoute,
   feeCollectionRoute,
   feeRegisterRoute,
   feeReceiptsRoute,
@@ -215,6 +254,11 @@ const routeTree = rootRoute.addChildren([
   examScheduleRoute,
   hallTicketsRoute,
   resultsRoute,
+  smsComposeRoute,
+  smsHistoryRoute,
+  admissionsAllRoute,
+  admissionsNewRoute,
+  admissionsReportsRoute,
   catchAllRoute,
 ]);
 

@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ─────────────────────────────────────────────────────────────────────────────────
 
 interface NavChild {
   label: string;
@@ -53,10 +53,9 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
-// ─── Menu Definitions ────────────────────────────────────────────────────────
+// ─── Menu Definitions ───────────────────────────────────────────────────────────────────────
 
 function getMenuItems(role: string): NavItem[] {
-  // role used for conditional SuperAdmin items below
   const isAdminLike = role === "SuperAdmin" || role === "Admin";
   const isParent = role === "Parent";
 
@@ -71,8 +70,11 @@ function getMenuItems(role: string): NavItem[] {
       {
         label: "SMS",
         icon: <MessageSquare className="w-5 h-5" />,
-        href: "/dashboard",
-        ocid: "sidebar.sms_link",
+        groupOcid: "sidebar.sms_group_toggle",
+        children: [
+          { label: "Compose SMS", href: "/sms/compose" },
+          { label: "SMS History", href: "/sms/history" },
+        ],
       },
       {
         label: "Email",
@@ -91,9 +93,9 @@ function getMenuItems(role: string): NavItem[] {
         icon: <UserPlus className="w-5 h-5" />,
         groupOcid: "sidebar.admissions_group_toggle",
         children: [
-          { label: "All Admissions", href: "/dashboard" },
-          { label: "New Admission", href: "/students?action=add" },
-          { label: "Admission Reports", href: "/dashboard" },
+          { label: "All Admissions", href: "/admissions/all" },
+          { label: "New Admission", href: "/admissions/new" },
+          { label: "Admission Reports", href: "/admissions/reports" },
         ],
       },
       {
@@ -136,7 +138,7 @@ function getMenuItems(role: string): NavItem[] {
         icon: <CreditCard className="w-5 h-5" />,
         groupOcid: "sidebar.finance_group_toggle",
         children: [
-          { label: "Fee Settings", href: "/dashboard" },
+          { label: "Fee Settings", href: "/fees/settings" },
           { label: "Fee Structure", href: "/fees/structure" },
           { label: "Fee Concession", href: "/dashboard" },
           { label: "Fee Collection", href: "/fees/collection" },
@@ -271,7 +273,7 @@ function getMenuItems(role: string): NavItem[] {
   ];
 }
 
-// ─── Sidebar Component ────────────────────────────────────────────────────────
+// ─── Sidebar Component ──────────────────────────────────────────────────────────────────────
 
 export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
   const [expanded, setExpanded] = useState(true);
@@ -282,7 +284,7 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
 
   const menuItems = getMenuItems(role);
 
-  // Auto-open group if a child route is active
+  // Auto-open group if a child route is active (accordion: only one open at a time)
   // biome-ignore lint/correctness/useExhaustiveDependencies: menuItems is stable (derived from role); re-running on currentPath is intentional
   useEffect(() => {
     for (const item of menuItems) {
@@ -292,26 +294,22 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
             child.href && currentPath.startsWith(child.href.split("?")[0]),
         );
         if (hasActive) {
-          setOpenGroups((prev) => {
-            if (prev.has(item.label)) return prev;
-            const next = new Set(prev);
-            next.add(item.label);
-            return next;
-          });
+          setOpenGroups(new Set([item.label]));
+          break;
         }
       }
     }
   }, [currentPath]);
 
+  // True accordion: opening one group closes all others
   const toggleGroup = useCallback((label: string) => {
     setOpenGroups((prev) => {
-      const next = new Set(prev);
-      if (next.has(label)) {
-        next.delete(label);
-      } else {
-        next.add(label);
+      if (prev.has(label)) {
+        // clicking open group closes it
+        return new Set<string>();
       }
-      return next;
+      // opening a group closes all others
+      return new Set<string>([label]);
     });
   }, []);
 
@@ -363,7 +361,7 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
           )}
           <button
             type="button"
-            data-ocid="sidebar.toggle_button"
+            data-ocid="sidebar.toggle"
             onClick={() => setExpanded((v) => !v)}
             className="ml-auto flex-shrink-0 p-1.5 rounded text-white/60 hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/50"
             aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}
@@ -393,25 +391,43 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                         type="button"
                         data-ocid={item.groupOcid}
                         onClick={() => toggleGroup(item.label)}
-                        className={`sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left ${groupActive ? "bg-white/15 border-l-2 border-white/80" : ""}`}
+                        className={[
+                          "sidebar-item w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-left",
+                          groupActive ? "border-l-2 border-white/80" : "",
+                          isOpen && !groupActive ? "sidebar-group-open" : "",
+                        ]
+                          .filter(Boolean)
+                          .join(" ")}
                         aria-expanded={isOpen}
                       >
                         <span
-                          className={`flex-shrink-0 ${groupActive ? "text-white" : "text-white/70"}`}
+                          className={`flex-shrink-0 ${
+                            groupActive || isOpen
+                              ? "text-white"
+                              : "text-white/70"
+                          }`}
                         >
                           {item.icon}
                         </span>
                         <span
-                          className={`flex-1 text-sm truncate ${groupActive ? "text-white font-semibold" : "font-medium text-white/90"}`}
+                          className={`flex-1 text-sm truncate ${
+                            groupActive
+                              ? "text-white font-semibold"
+                              : isOpen
+                                ? "text-white font-medium"
+                                : "font-medium text-white/90"
+                          }`}
                         >
                           {item.label}
                         </span>
                         <span
-                          className="flex-shrink-0 text-white/50 transition-transform duration-200"
+                          className="flex-shrink-0 text-white/50 transition-transform duration-250"
                           style={{
                             transform: isOpen
                               ? "rotate(180deg)"
                               : "rotate(0deg)",
+                            transition:
+                              "transform 0.25s cubic-bezier(0.4,0,0.2,1)",
                           }}
                         >
                           <ChevronDown className="w-4 h-4" />
@@ -427,7 +443,9 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                               setExpanded(true);
                               toggleGroup(item.label);
                             }}
-                            className={`sidebar-item w-full flex items-center justify-center px-3 py-2.5 rounded-md ${groupActive ? "bg-white/15" : ""}`}
+                            className={`sidebar-item w-full flex items-center justify-center px-3 py-2.5 rounded-md ${
+                              groupActive ? "bg-white/15" : ""
+                            }`}
                             aria-label={item.label}
                           >
                             <span
@@ -449,25 +467,35 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                       </Tooltip>
                     )}
 
-                    {/* Children accordion */}
+                    {/* Children accordion with smooth height + opacity transition */}
                     {expanded && (
                       <div
-                        className="overflow-hidden transition-all duration-200 ease-in-out"
+                        className="overflow-hidden"
                         style={{
                           maxHeight: isOpen
                             ? `${item.children!.length * 44}px`
                             : "0px",
                           opacity: isOpen ? 1 : 0,
+                          transition:
+                            "max-height 0.28s cubic-bezier(0.4,0,0.2,1), opacity 0.22s ease",
                         }}
                       >
-                        <div className="ml-4 pl-3 border-l border-white/10 mt-0.5 mb-1">
+                        <div
+                          className={`ml-4 pl-3 border-l border-white/10 mt-0.5 mb-1 ${
+                            isOpen ? "sidebar-accordion-content" : ""
+                          }`}
+                        >
                           {item.children!.map((child) => {
                             const childActive = isLeafActive(child.href);
                             return (
                               <Link
                                 key={child.label}
                                 to={child.href ?? "/dashboard"}
-                                className={`sidebar-child-item flex items-center py-2 px-3 rounded-md text-sm ${childActive ? "bg-white/20 text-white font-semibold" : ""}`}
+                                className={`sidebar-child-item flex items-center py-2 px-3 rounded-md text-sm ${
+                                  childActive
+                                    ? "bg-white/20 text-white font-semibold"
+                                    : ""
+                                }`}
                               >
                                 {child.label}
                               </Link>
@@ -488,15 +516,25 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                   key={item.label}
                   to={item.href ?? "/dashboard"}
                   data-ocid={item.ocid}
-                  className={`sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-md ${leafActive ? "bg-white/15 border-l-2 border-white/80 text-white font-semibold" : ""}`}
+                  className={`sidebar-item flex items-center gap-3 px-3 py-2.5 rounded-md ${
+                    leafActive
+                      ? "border-l-2 border-white/80 text-white font-semibold"
+                      : ""
+                  }`}
                 >
                   <span
-                    className={`flex-shrink-0 ${leafActive ? "text-white" : "text-white/70"}`}
+                    className={`flex-shrink-0 ${
+                      leafActive ? "text-white" : "text-white/70"
+                    }`}
                   >
                     {item.icon}
                   </span>
                   <span
-                    className={`text-sm truncate ${leafActive ? "text-white font-semibold" : "font-medium text-white/90"}`}
+                    className={`text-sm truncate ${
+                      leafActive
+                        ? "text-white font-semibold"
+                        : "font-medium text-white/90"
+                    }`}
                   >
                     {item.label}
                   </span>
@@ -507,7 +545,9 @@ export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
                     <Link
                       to={item.href ?? "/dashboard"}
                       data-ocid={item.ocid}
-                      className={`sidebar-item flex items-center justify-center px-3 py-2.5 rounded-md ${leafActive ? "bg-white/15" : ""}`}
+                      className={`sidebar-item flex items-center justify-center px-3 py-2.5 rounded-md ${
+                        leafActive ? "bg-white/15" : ""
+                      }`}
                       aria-label={item.label}
                     >
                       <span

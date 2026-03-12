@@ -1102,7 +1102,8 @@ function AdminPanelContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.05 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1"
+          style={{ "--delay": "0s" } as React.CSSProperties}
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1 stat-card-glow dashboard-card-animate"
         >
           <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
             <Users className="w-5 h-5 text-blue-500" />
@@ -1133,7 +1134,8 @@ function AdminPanelContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.09 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1"
+          style={{ "--delay": "0.1s" } as React.CSSProperties}
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1 stat-card-glow dashboard-card-animate"
         >
           <div className="w-10 h-10 rounded-xl bg-green-50 flex items-center justify-center flex-shrink-0">
             <GraduationCap className="w-5 h-5 text-green-600" />
@@ -1163,7 +1165,8 @@ function AdminPanelContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.13 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1"
+          style={{ "--delay": "0.2s" } as React.CSSProperties}
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1 stat-card-glow dashboard-card-animate"
         >
           <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
             <BookOpen className="w-5 h-5 text-purple-500" />
@@ -1188,7 +1191,8 @@ function AdminPanelContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.17 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1"
+          style={{ "--delay": "0.3s" } as React.CSSProperties}
+          className="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1 stat-card-glow dashboard-card-animate"
         >
           <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
             <CreditCard className="w-5 h-5 text-amber-500" />
@@ -1214,7 +1218,8 @@ function AdminPanelContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.21 }}
-          className="bg-white rounded-xl shadow-sm border border-emerald-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1"
+          style={{ "--delay": "0.4s" } as React.CSSProperties}
+          className="bg-white rounded-xl shadow-sm border border-emerald-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1 stat-card-glow dashboard-card-animate"
         >
           <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
             <TrendingUp className="w-5 h-5 text-emerald-600" />
@@ -1240,7 +1245,8 @@ function AdminPanelContent({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.25 }}
-          className="bg-white rounded-xl shadow-sm border border-violet-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1"
+          style={{ "--delay": "0.5s" } as React.CSSProperties}
+          className="bg-white rounded-xl shadow-sm border border-violet-100 p-5 flex items-center gap-3 hover:shadow-md transition-shadow col-span-1 stat-card-glow dashboard-card-animate"
         >
           <div className="w-10 h-10 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
             <UserPlus className="w-5 h-5 text-violet-600" />
