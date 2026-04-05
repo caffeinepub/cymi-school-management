@@ -24,6 +24,8 @@ import ExamSchedulePage from "./pages/exam/ExamSchedulePage";
 import HallTicketsPage from "./pages/exam/HallTicketsPage";
 import ResultsPage from "./pages/exam/ResultsPage";
 import FeeCollectionPage from "./pages/fees/FeeCollectionPage";
+import FeeConcessionPage from "./pages/fees/FeeConcessionPage";
+import FeeDefaultersPage from "./pages/fees/FeeDefaultersPage";
 import FeeHistoryPage from "./pages/fees/FeeHistoryPage";
 import FeeReceiptsPage from "./pages/fees/FeeReceiptsPage";
 import FeeRegisterPage from "./pages/fees/FeeRegisterPage";
@@ -159,6 +161,16 @@ const feeReportsRoute = createRoute({
   path: "/fees/reports",
   component: FeeReportsPage,
 });
+const feeConcessionRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/fees/concession",
+  component: FeeConcessionPage,
+});
+const feeDefaultersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/fees/defaulters",
+  component: FeeDefaultersPage,
+});
 const superAdminControlRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/superadmin",
@@ -248,6 +260,8 @@ const routeTree = rootRoute.addChildren([
   feeReceiptsRoute,
   feeHistoryRoute,
   feeReportsRoute,
+  feeConcessionRoute,
+  feeDefaultersRoute,
   superAdminControlRoute,
   teachersRoute,
   teacherProfileRoute,
