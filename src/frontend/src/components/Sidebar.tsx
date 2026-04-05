@@ -15,6 +15,7 @@ import {
   ChevronDown,
   ChevronRight,
   CreditCard,
+  FileText,
   GraduationCap,
   LayoutDashboard,
   LogOut,
@@ -27,11 +28,12 @@ import {
   UserCircle,
   UserPlus,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-// ─── Types ─────────────────────────────────────────────────────────────────────────────────
+// ─── Types ──────────────────────────────────────────────────────────────────────────────────────
 
 interface NavChild {
   label: string;
@@ -53,7 +55,7 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
-// ─── Menu Definitions ───────────────────────────────────────────────────────────────────────
+// ─── Menu Definitions ──────────────────────────────────────────────────────────────────────────────
 
 function getMenuItems(role: string): NavItem[] {
   const isAdminLike = role === "SuperAdmin" || role === "Admin";
@@ -140,11 +142,72 @@ function getMenuItems(role: string): NavItem[] {
         children: [
           { label: "Fee Settings", href: "/fees/settings" },
           { label: "Fee Structure", href: "/fees/structure" },
-          { label: "Fee Concession", href: "/dashboard" },
+          { label: "Fee Concession", href: "/fees/concession" },
           { label: "Fee Collection", href: "/fees/collection" },
           { label: "Fee Register", href: "/fees/register" },
-          { label: "Fee Defaulters", href: "/dashboard" },
+          { label: "Fee Defaulters", href: "/fees/defaulters" },
           { label: "Fee Receipt History", href: "/fees/history" },
+        ],
+      },
+      {
+        label: "Accounts",
+        icon: <BookOpen className="w-5 h-5" />,
+        groupOcid: "sidebar.accounts_group_toggle",
+        children: [
+          { label: "Overview", href: "/accounts/overview" },
+          { label: "Ledger", href: "/accounts/ledger" },
+          { label: "Journal", href: "/accounts/journal" },
+          { label: "Balance Sheet", href: "/accounts/balance-sheet" },
+          { label: "Income & Expense", href: "/accounts/income-expense" },
+        ],
+      },
+      {
+        label: "Payroll",
+        icon: <Wallet className="w-5 h-5" />,
+        groupOcid: "sidebar.payroll_group_toggle",
+        children: [
+          { label: "Overview", href: "/payroll/overview" },
+          { label: "Staff Salary", href: "/payroll/staff-salary" },
+          { label: "Process Payroll", href: "/payroll/process" },
+          { label: "Payslips", href: "/payroll/payslips" },
+          { label: "Reports", href: "/payroll/reports" },
+        ],
+      },
+      {
+        label: "Payments",
+        icon: <CreditCard className="w-5 h-5" />,
+        groupOcid: "sidebar.payments_group_toggle",
+        children: [
+          { label: "Overview", href: "/payments/overview" },
+          { label: "Received", href: "/payments/received" },
+          { label: "Pending", href: "/payments/pending" },
+          { label: "Vouchers", href: "/payments/vouchers" },
+          { label: "Payment Modes", href: "/payments/modes" },
+        ],
+      },
+      {
+        label: "Billing",
+        icon: <FileText className="w-5 h-5" />,
+        groupOcid: "sidebar.billing_group_toggle",
+        children: [
+          { label: "Invoices", href: "/billing/invoices" },
+          { label: "Create Invoice", href: "/billing/create" },
+          { label: "Recurring Billing", href: "/billing/recurring" },
+          { label: "Reports", href: "/billing/reports" },
+        ],
+      },
+      {
+        label: "HR",
+        icon: <Users className="w-5 h-5" />,
+        groupOcid: "sidebar.hr_group_toggle",
+        children: [
+          { label: "Overview", href: "/hr/overview" },
+          { label: "Employees", href: "/hr/employees" },
+          { label: "Recruitment", href: "/hr/recruitment" },
+          { label: "Leaves", href: "/hr/leaves" },
+          { label: "Performance", href: "/hr/performance" },
+          { label: "Documents", href: "/hr/documents" },
+          { label: "Policies", href: "/hr/policies" },
         ],
       },
       {
@@ -273,7 +336,7 @@ function getMenuItems(role: string): NavItem[] {
   ];
 }
 
-// ─── Sidebar Component ──────────────────────────────────────────────────────────────────────
+// ─── Sidebar Component ──────────────────────────────────────────────────────────────────────────────
 
 export default function Sidebar({ role, userName, onLogout }: SidebarProps) {
   const [expanded, setExpanded] = useState(true);

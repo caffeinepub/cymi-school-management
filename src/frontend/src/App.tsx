@@ -17,9 +17,20 @@ import StudentsPage from "./pages/StudentsPage";
 import SuperAdminControlPage from "./pages/SuperAdminControlPage";
 import SystemSettingsPage from "./pages/SystemSettingsPage";
 import UserManagementPage from "./pages/UserManagementPage";
+import AccountsJournalPage from "./pages/accounts/AccountsJournalPage";
+import AccountsLedgerPage from "./pages/accounts/AccountsLedgerPage";
+// Accounts
+import AccountsOverviewPage from "./pages/accounts/AccountsOverviewPage";
+import BalanceSheetPage from "./pages/accounts/BalanceSheetPage";
+import IncomeExpensePage from "./pages/accounts/IncomeExpensePage";
 import AdmissionReportsPage from "./pages/admissions/AdmissionReportsPage";
 import AllAdmissionsPage from "./pages/admissions/AllAdmissionsPage";
 import NewAdmissionPage from "./pages/admissions/NewAdmissionPage";
+import BillingCreatePage from "./pages/billing/BillingCreatePage";
+// Billing
+import BillingInvoicesPage from "./pages/billing/BillingInvoicesPage";
+import BillingRecurringPage from "./pages/billing/BillingRecurringPage";
+import BillingReportsPage from "./pages/billing/BillingReportsPage";
 import ExamSchedulePage from "./pages/exam/ExamSchedulePage";
 import HallTicketsPage from "./pages/exam/HallTicketsPage";
 import ResultsPage from "./pages/exam/ResultsPage";
@@ -32,6 +43,26 @@ import FeeRegisterPage from "./pages/fees/FeeRegisterPage";
 import FeeReportsPage from "./pages/fees/FeeReportsPage";
 import FeeSettingsPage from "./pages/fees/FeeSettingsPage";
 import FeeStructurePage from "./pages/fees/FeeStructurePage";
+import HRDocumentsPage from "./pages/hr/HRDocumentsPage";
+import HREmployeesPage from "./pages/hr/HREmployeesPage";
+import HRLeavesPage from "./pages/hr/HRLeavesPage";
+// HR
+import HROverviewPage from "./pages/hr/HROverviewPage";
+import HRPerformancePage from "./pages/hr/HRPerformancePage";
+import HRPoliciesPage from "./pages/hr/HRPoliciesPage";
+import HRRecruitmentPage from "./pages/hr/HRRecruitmentPage";
+import PaymentModesPage from "./pages/payments/PaymentModesPage";
+import PaymentVouchersPage from "./pages/payments/PaymentVouchersPage";
+// Payments
+import PaymentsOverviewPage from "./pages/payments/PaymentsOverviewPage";
+import PaymentsPendingPage from "./pages/payments/PaymentsPendingPage";
+import PaymentsReceivedPage from "./pages/payments/PaymentsReceivedPage";
+// Payroll
+import PayrollOverviewPage from "./pages/payroll/PayrollOverviewPage";
+import PayrollProcessPage from "./pages/payroll/PayrollProcessPage";
+import PayrollReportsPage from "./pages/payroll/PayrollReportsPage";
+import PayslipsPage from "./pages/payroll/PayslipsPage";
+import StaffSalaryPage from "./pages/payroll/StaffSalaryPage";
 import SmsComposePage from "./pages/sms/SmsComposePage";
 import SmsHistoryPage from "./pages/sms/SmsHistoryPage";
 import TeacherProfilePage from "./pages/staff/TeacherProfilePage";
@@ -201,8 +232,6 @@ const resultsRoute = createRoute({
   path: "/exam/results",
   component: ResultsPage,
 });
-
-// SMS routes
 const smsComposeRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/sms/compose",
@@ -213,8 +242,6 @@ const smsHistoryRoute = createRoute({
   path: "/sms/history",
   component: SmsHistoryPage,
 });
-
-// Admissions routes
 const admissionsAllRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admissions/all",
@@ -229,6 +256,141 @@ const admissionsReportsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/admissions/reports",
   component: AdmissionReportsPage,
+});
+// Accounts routes
+const accountsOverviewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/accounts/overview",
+  component: AccountsOverviewPage,
+});
+const accountsLedgerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/accounts/ledger",
+  component: AccountsLedgerPage,
+});
+const accountsJournalRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/accounts/journal",
+  component: AccountsJournalPage,
+});
+const balanceSheetRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/accounts/balance-sheet",
+  component: BalanceSheetPage,
+});
+const incomeExpenseRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/accounts/income-expense",
+  component: IncomeExpensePage,
+});
+// Payroll routes
+const payrollOverviewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/payroll/overview",
+  component: PayrollOverviewPage,
+});
+const staffSalaryRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/payroll/staff-salary",
+  component: StaffSalaryPage,
+});
+const payrollProcessRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/payroll/process",
+  component: PayrollProcessPage,
+});
+const payslipsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/payroll/payslips",
+  component: PayslipsPage,
+});
+const payrollReportsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/payroll/reports",
+  component: PayrollReportsPage,
+});
+// Payments routes
+const paymentsOverviewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/payments/overview",
+  component: PaymentsOverviewPage,
+});
+const paymentsReceivedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/payments/received",
+  component: PaymentsReceivedPage,
+});
+const paymentsPendingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/payments/pending",
+  component: PaymentsPendingPage,
+});
+const paymentVouchersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/payments/vouchers",
+  component: PaymentVouchersPage,
+});
+const paymentModesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/payments/modes",
+  component: PaymentModesPage,
+});
+// Billing routes
+const billingInvoicesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/billing/invoices",
+  component: BillingInvoicesPage,
+});
+const billingCreateRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/billing/create",
+  component: BillingCreatePage,
+});
+const billingRecurringRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/billing/recurring",
+  component: BillingRecurringPage,
+});
+const billingReportsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/billing/reports",
+  component: BillingReportsPage,
+});
+// HR routes
+const hrOverviewRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/hr/overview",
+  component: HROverviewPage,
+});
+const hrEmployeesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/hr/employees",
+  component: HREmployeesPage,
+});
+const hrRecruitmentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/hr/recruitment",
+  component: HRRecruitmentPage,
+});
+const hrLeavesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/hr/leaves",
+  component: HRLeavesPage,
+});
+const hrPerformanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/hr/performance",
+  component: HRPerformancePage,
+});
+const hrDocumentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/hr/documents",
+  component: HRDocumentsPage,
+});
+const hrPoliciesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/hr/policies",
+  component: HRPoliciesPage,
 });
 
 const catchAllRoute = createRoute({
@@ -273,6 +435,37 @@ const routeTree = rootRoute.addChildren([
   admissionsAllRoute,
   admissionsNewRoute,
   admissionsReportsRoute,
+  // Accounts
+  accountsOverviewRoute,
+  accountsLedgerRoute,
+  accountsJournalRoute,
+  balanceSheetRoute,
+  incomeExpenseRoute,
+  // Payroll
+  payrollOverviewRoute,
+  staffSalaryRoute,
+  payrollProcessRoute,
+  payslipsRoute,
+  payrollReportsRoute,
+  // Payments
+  paymentsOverviewRoute,
+  paymentsReceivedRoute,
+  paymentsPendingRoute,
+  paymentVouchersRoute,
+  paymentModesRoute,
+  // Billing
+  billingInvoicesRoute,
+  billingCreateRoute,
+  billingRecurringRoute,
+  billingReportsRoute,
+  // HR
+  hrOverviewRoute,
+  hrEmployeesRoute,
+  hrRecruitmentRoute,
+  hrLeavesRoute,
+  hrPerformanceRoute,
+  hrDocumentsRoute,
+  hrPoliciesRoute,
   catchAllRoute,
 ]);
 
